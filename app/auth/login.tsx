@@ -1,48 +1,76 @@
-import React, { useState } from 'react';
-import { View, TextInput, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { useAuth } from '@/hooks/use-auth';
+import React, { useState } from "react";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+} from "react-native";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
-    // Aquí normalmente harías un fetch a tu backend
-    if (email && password) {
-      // Simula token devuelto por el backend
-      const fakeToken = 'token12345';
-      await login(fakeToken);
+    if (!email || !password) {
+      Alert.alert("Error", "Por favor completa todos los campos");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const ok = await login(email, password);
+
+      if (!ok) {
+        Alert.alert("Error", "Credenciales inválidas o usuario no autorizado");
+        return;
+      }
+
+      router.replace("/home");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "No se pudo iniciar sesión");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <ScrollView style={styles.scroll}>
       <ThemedView style={styles.container}>
-        {/* Logo */}
         <Image
-          source={require('@/assets/images/login-img-foodlee.png')}
+          source={require("@/assets/images/login-img-foodlee.png")}
           style={styles.logo}
           resizeMode="contain"
         />
 
-        {/* Texto principal */}
         <View style={styles.textContainer}>
-          <ThemedText type="title" style={styles.title}>Welcome</ThemedText>
+          <ThemedText type="title" style={styles.title}>
+            Welcome
+          </ThemedText>
           <ThemedText style={styles.subtitle}>
-            Please login or sign up to continue our app
+            Please login to continue
           </ThemedText>
         </View>
 
-        {/* Email */}
         <View style={styles.inputGroup}>
-          <ThemedText type="defaultSemiBold" style={styles.label}>Email</ThemedText>
+          <ThemedText type="defaultSemiBold" style={styles.label}>
+            Email
+          </ThemedText>
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
-              placeholder="braxtonstark@gmail.com"
+              placeholder="email@example.com"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -50,16 +78,17 @@ export default function LoginScreen() {
               placeholderTextColor="#888"
             />
             <Image
-              source={require('@/assets/images/login-img-icon.png')}
+              source={require("@/assets/images/login-img-icon.png")}
               style={styles.icon}
               resizeMode="contain"
             />
           </View>
         </View>
 
-        {/* Password */}
         <View style={styles.inputGroup}>
-          <ThemedText type="defaultSemiBold" style={styles.label}>Password</ThemedText>
+          <ThemedText type="defaultSemiBold" style={styles.label}>
+            Password
+          </ThemedText>
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
@@ -70,24 +99,44 @@ export default function LoginScreen() {
               placeholderTextColor="#888"
             />
             <Image
-              source={require('@/assets/images/login-img-image.png')}
+              source={require("@/assets/images/login-img-image.png")}
               style={styles.icon}
               resizeMode="contain"
             />
           </View>
         </View>
 
-        {/* Botón de Login */}
-        <TouchableOpacity onPress={handleLogin} style={styles.loginButton}>
-          <ThemedText type="defaultSemiBold" style={styles.loginText}>Login</ThemedText>
+        <TouchableOpacity
+          onPress={handleLogin}
+          style={styles.loginButton}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ThemedText type="defaultSemiBold" style={styles.loginText}>
+              Login
+            </ThemedText>
+          )}
         </TouchableOpacity>
 
-        {/* Texto inferior */}
         <View style={styles.footer}>
-          <ThemedText>Forgot your password?</ThemedText>
-          {/* <TouchableOpacity onPress={() => router.push('/auth/register')} style={styles.signUpLink}>
-            <ThemedText type="link">Don’t have an account? Sign up</ThemedText>
-          </TouchableOpacity> */}
+          <ThemedText
+            type="link"
+            onPress={() => router.push("/auth/forgot-password")}
+          >
+            Olvidaste tu contraseña?
+          </ThemedText>
+
+          <ThemedText>
+            No tienes una cuenta aún?{" "}
+            <ThemedText
+              type="link"
+              onPress={() => router.push("/auth/register")}
+            >
+              Registrate
+            </ThemedText>
+          </ThemedText>
         </View>
       </ThemedView>
     </ScrollView>
@@ -97,11 +146,11 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   scroll: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   container: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingTop: 80,
   },
@@ -111,17 +160,17 @@ const styles = StyleSheet.create({
     marginTop: 111,
   },
   textContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 60,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   subtitle: {
-    color: '#888',
+    color: "#888",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 4,
   },
   inputGroup: {
@@ -130,23 +179,23 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#555',
+    color: "#555",
   },
   icon: {
     width: 13,
@@ -155,21 +204,18 @@ const styles = StyleSheet.create({
   loginButton: {
     marginTop: 24,
     width: 327,
-    backgroundColor: 'black',
+    backgroundColor: "black",
     borderRadius: 10,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loginText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 24,
-  },
-  signUpLink: {
-    marginTop: 12,
   },
 });

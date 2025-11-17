@@ -1,32 +1,16 @@
-// app/home.tsx
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadToken = async () => {
-      const storedToken = await AsyncStorage.getItem('auth_token');
-      setToken(storedToken);
-    };
-    loadToken();
-  }, []);
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('auth_token');
-    router.replace('/auth/login');
+    await logout();
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bienvenido 🎉</Text>
-      <Text style={styles.subtitle}>Token actual:</Text>
-      <Text style={styles.token}>{token}</Text>
-
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
@@ -43,24 +27,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 16,
-    marginTop: 10,
+    marginVertical: 10,
   },
   token: {
     fontSize: 12,
-    marginVertical: 10,
     color: '#555',
+    marginBottom: 20,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: '#2f95dc',
     padding: 12,
     borderRadius: 8,
-    marginTop: 30,
   },
   buttonText: {
     color: '#fff',
