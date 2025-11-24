@@ -11,20 +11,22 @@ import {
 } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "expo-router";
 
 export default function CreateNewPasswordScreen() {
   const router = useRouter();
-  const [password, setPassword] = useState("");
+  const { setPassword } = useAuth();
+  const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
-    if (!password || password.length < 8) {
+    if (!newPassword || newPassword.length < 8) {
       Alert.alert("Error", "La contraseña debe tener al menos 8 caracteres");
       return false;
     }
-    if (password !== confirm) {
+    if (newPassword !== confirm) {
       Alert.alert("Error", "Las contraseñas no coinciden");
       return false;
     }
@@ -33,19 +35,15 @@ export default function CreateNewPasswordScreen() {
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    try {
-      setLoading(true);
-      // TODO: llamar a tu endpoint para actualizar la password
-      await new Promise((r) => setTimeout(r, 800));
-      router.replace("/auth/verified-confirm");
-    } catch (err: any) {
-      Alert.alert(
-        "Error",
-        err?.message || "No se pudo actualizar la contraseña"
-      );
-    } finally {
-      setLoading(false);
+    setLoading(true);
+    
+    const ok = await setPassword(newPassword);
+
+    if (!ok) {
+      Alert.alert("Contraseña Inválido", "La contraseña no es válido.");
+      return;
     }
+    router.replace("/auth/verified-confirm");
   };
 
   return (
@@ -73,8 +71,8 @@ export default function CreateNewPasswordScreen() {
               style={styles.input}
               placeholder="••••••••"
               secureTextEntry
-              value={password}
-              onChangeText={setPassword}
+              value={newPassword}
+              onChangeText={setNewPassword}
               placeholderTextColor="#888"
             />
           </View>

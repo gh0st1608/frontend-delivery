@@ -34,7 +34,7 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    router.push("/verify-email");
+    router.push("/auth/verify-email");
   };
 
   return (

@@ -8,6 +8,7 @@ import {
   VerifyEmailPayload,
   VerifyEmailResponse,
   VerifyCodePayload,
+  SetPasswordPayload,
 } from "../types/auth";
 
 export const AuthService = {
@@ -78,7 +79,7 @@ export const AuthService = {
 
     const res = await api.post<
       ApiResponse<VerifyEmailResponse> | ApiResponseError
-    >("/auth/verify-email", request);
+    >("/auth/verify-code", request);
 
     // Validamos si la respuesta es un error
     if ("Error" in res.data) {
@@ -88,4 +89,24 @@ export const AuthService = {
     // Si llegas aquí, es un OK
     return res.data.Data;
   },
+
+  async setPassword(payload: SetPasswordPayload) {
+    const request: ApiRequest<{ User: SetPasswordPayload }> = {
+      Data: {
+        User: payload,
+      },
+    };
+
+    const res = await api.post<
+      ApiResponse<VerifyEmailResponse> | ApiResponseError
+    >("/auth/set-password", request);
+
+    // Validamos si la respuesta es un error
+    if ("Error" in res.data) {
+      throw res.data.Error; // Lanzas directamente el error tipado
+    }
+
+    // Si llegas aquí, es un OK
+    return res.data.Data;
+  },  
 };

@@ -12,6 +12,7 @@ interface AuthContextProps {
   register: (name: string, email: string, password: string) => Promise<boolean>;
   verifyEmail: (email: string) => Promise<boolean>;
   verifyCode: (code: string) => Promise<boolean>;
+  setPassword: (password: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const rootNav = useRootNavigationState();
 
   const [user, setUser] = useState<any>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [authenticated, setAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -94,24 +96,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // ---------------------------------------
   const verifyEmail = async (email: string): Promise<boolean> => {
     try {
-      const data = await AuthService.verifyEmail({ email });
-      // data === ApiResponse<VerifiedEmailResponse>["Data"]
-
-      return data.User.verifyEmail ?? false;
+      await AuthService.verifyEmail({ email });
+      setPendingEmail(email);
+      return true;
     } catch (err) {
-      // err es BaseResponseError lanzado desde el service
       return false;
     }
   };
 
-  const verifyCode = async (codeMailing: string): Promise<boolean> => {
+  const verifyCode = async (code: string): Promise<boolean> => {
     try {
-      const data = await AuthService.verifyCode({ codeMailing });
-      // data === ApiResponse<VerifiedEmailResponse>["Data"]
+      if (!pendingEmail) return false;
+      const data = await AuthService.verifyCode({ email: pendingEmail, code });
 
       return data.User.verifyEmail ?? false;
     } catch (err) {
-      // err es BaseResponseError lanzado desde el service
+      return false;
+    }
+  };
+
+  const setPassword = async (password: string): Promise<boolean> => {
+    try {
+      if (!pendingEmail) return false;
+      const data = await AuthService.setPassword({
+        email: pendingEmail,
+        password,
+      });
+      return data.User.verifyEmail ?? false;
+    } catch (err) {
       return false;
     }
   };
@@ -137,6 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         register,
         verifyEmail,
         verifyCode,
+        setPassword,
         logout,
       }}
     >

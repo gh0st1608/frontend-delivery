@@ -17,11 +17,11 @@ import { useAuth } from "@/hooks/use-auth";
 export default function VerifyEmailScreen() {
   const { verifyCode } = useAuth();
   const router = useRouter();
-  const [codeMailing, setCodeMailing] = useState<string>(""); // OTP code (single string)
+  const [code, setCode] = useState<string>(""); // OTP code (single string)
   const [loading, setLoading] = useState(false);
 
   const handleVerifyCode = async () => {
-    if (!codeMailing || codeMailing.trim().length < 4) {
+    if (!code || code.trim().length < 4) {
       Alert.alert(
         "Código inválido",
         "Por favor ingresa el código que recibiste."
@@ -29,14 +29,14 @@ export default function VerifyEmailScreen() {
       return;
     }
 
-    const ok = await verifyCode(codeMailing);
+    const ok = await verifyCode(code);
 
     if (!ok) {
       Alert.alert("Codigo Inválido", "El codigo no es válido.");
       return;
     }
 
-    router.push("/create-new-password");
+    router.push("/auth/create-new-password");
 
   };
 
@@ -71,9 +71,9 @@ export default function VerifyEmailScreen() {
               style={styles.otpInput}
               placeholder="____"
               keyboardType="number-pad"
-              value={codeMailing}
+              value={code}
               onChangeText={(t) =>
-                setCodeMailing(t.replace(/[^0-9]/g, "").slice(0, 6))
+                setCode(t.replace(/[^0-9]/g, "").slice(0, 6))
               }
               maxLength={6}
               placeholderTextColor="#AAA"

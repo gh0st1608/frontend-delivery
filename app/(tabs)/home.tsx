@@ -1,11 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useAuth } from '@/hooks/use-auth';
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
   const { logout } = useAuth();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await logout();
+    router.replace("/auth/login");
   };
 
   return (
@@ -21,14 +24,14 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
   },
   subtitle: {
@@ -37,16 +40,16 @@ const styles = StyleSheet.create({
   },
   token: {
     fontSize: 12,
-    color: '#555',
+    color: "#555",
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#2f95dc',
+    backgroundColor: "#2f95dc",
     padding: 12,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
 });

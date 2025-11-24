@@ -18,7 +18,13 @@ export interface VerifyEmailPayload {
 }
 
 export interface VerifyCodePayload {
-  codeMailing: string;
+  email: string;
+  code: string;
+}
+
+export interface SetPasswordPayload {
+  email: string;
+  password: string;
 }
 
 // ----------- Responses -----------
