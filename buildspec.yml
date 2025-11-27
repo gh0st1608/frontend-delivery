@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - npm install --global expo-cli
+      - npm install
+
+  build:
+    commands:
+      - npx expo export --platform web
+
+  post_build:
+    commands:
+      - echo "Subiendo archivos a S3..."
+      - aws s3 sync dist/ s3://foodstore.solutionserj.com/ --delete
+      - echo "Invalidando CloudFront..."
+      - aws cloudfront create-invalidation --distribution-id E1VD9H39FYQZIE --paths "/*"
