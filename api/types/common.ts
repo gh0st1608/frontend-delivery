@@ -25,3 +25,11 @@ export interface ApiResponseError {
   Data: null;
   Error: BaseResponseError;
 }
+
+export interface ApiParamsRequest {
+  search?: string;
+  limit: number;
+  cursor?: string;
+}
+
+

@@ -38,8 +38,6 @@ export default function RegisterScreen() {
         return;
       }
 
-      // El screen decide la navegación
-      router.replace("/home");
     } finally {
       setLoading(false);
     }

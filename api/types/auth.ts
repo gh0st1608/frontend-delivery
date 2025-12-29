@@ -1,4 +1,5 @@
 import { BaseResponse } from "./common";
+import { User } from "./user";
 
 // ----------- Payloads -----------
 export interface LoginPayload {
@@ -36,9 +37,9 @@ export interface LoginResponse extends BaseResponse {
 }
 
 export interface RegisterResponse extends BaseResponse {
-  User: {
-    id: string;
-    email: string;
+  Auth: {
+    accessToken: string;
+    refreshToken: string;
   };
 }
 
@@ -47,3 +48,15 @@ export interface VerifyEmailResponse extends BaseResponse {
     verifyEmail: boolean 
   };
 }
+
+export interface MeResponse {
+  user: User;
+}
+
+export type AuthStatus =
+  | "checking"
+  | "unauthenticated"
+  | "authenticated"
+  | "emailVerified"
+  | "passwordRequired"
+  | "onboardingRequired";

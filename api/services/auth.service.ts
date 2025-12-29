@@ -1,4 +1,4 @@
-import api from "../client";
+import authApi from "../clients/auth.client";
 import { ApiRequest, ApiResponse, ApiResponseError } from "../types/common";
 import {
   LoginPayload,
@@ -9,6 +9,7 @@ import {
   VerifyEmailResponse,
   VerifyCodePayload,
   SetPasswordPayload,
+  MeResponse,
 } from "../types/auth";
 
 export const AuthService = {
@@ -17,18 +18,16 @@ export const AuthService = {
       Data: { Auth: payload },
     };
 
-    const res = await api.post<ApiResponse<LoginResponse> | ApiResponseError>(
-      "/auth/login",
+    const res = await authApi.post<ApiResponse<LoginResponse> | ApiResponseError>(
+      "/login",
       request
     );
 
-    // Atención: Axios captura errores HTTP, pero si tu API devuelve 200 con Error,
-    // igual debemos validarlo manualmente
     if ("Error" in res.data) {
-      throw res.data.Error; // lanza BaseResponseError
+      throw res.data.Error;
     }
 
-    return res.data.Data; // solo Data limpia
+    return res.data.Data;
   },
 
   async register(payload: RegisterPayload): Promise<RegisterResponse> {
@@ -38,8 +37,8 @@ export const AuthService = {
       },
     };
 
-    const res = await api.post<ApiResponse<RegisterResponse> | ApiResponseError>(
-      "/auth/register",
+    const res = await authApi.post<ApiResponse<RegisterResponse> | ApiResponseError>(
+      "/register",
       request
     );
 
@@ -57,9 +56,9 @@ export const AuthService = {
       },
     };
 
-    const res = await api.post<
+    const res = await authApi.post<
       ApiResponse<VerifyEmailResponse> | ApiResponseError
-    >("/auth/verify-email", request);
+    >("/verify-email", request);
 
     // Validamos si la respuesta es un error
     if ("Error" in res.data) {
@@ -77,9 +76,9 @@ export const AuthService = {
       },
     };
 
-    const res = await api.post<
+    const res = await authApi.post<
       ApiResponse<VerifyEmailResponse> | ApiResponseError
-    >("/auth/verify-code", request);
+    >("/verify-code", request);
 
     // Validamos si la respuesta es un error
     if ("Error" in res.data) {
@@ -97,9 +96,9 @@ export const AuthService = {
       },
     };
 
-    const res = await api.post<
+    const res = await authApi.post<
       ApiResponse<VerifyEmailResponse> | ApiResponseError
-    >("/auth/set-password", request);
+    >("/set-password", request);
 
     // Validamos si la respuesta es un error
     if ("Error" in res.data) {
@@ -108,5 +107,18 @@ export const AuthService = {
 
     // Si llegas aquí, es un OK
     return res.data.Data;
-  },  
+  },
+  
+  async me(): Promise<MeResponse> {
+    const res = await authApi.get<ApiResponse<MeResponse> | ApiResponseError>(
+      "/me"
+    );
+
+    if ("Error" in res.data) {
+      throw res.data.Error;
+    }
+
+    return res.data.Data;
+  },
+  
 };

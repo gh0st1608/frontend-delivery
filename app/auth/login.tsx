@@ -36,8 +36,7 @@ export default function LoginScreen() {
         Alert.alert("Error", "Credenciales inválidas o usuario no autorizado");
         return;
       }
-
-      router.replace("/home");
+      
     } catch (err: any) {
       Alert.alert("Error", err.message || "No se pudo iniciar sesión");
     } finally {

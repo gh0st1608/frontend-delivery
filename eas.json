@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "API_URL": "http://localhost:3000"
+        "API_URL": "https://pb1eftisc5.execute-api.us-east-1.amazonaws.com/dev"
       }
     },
     "preview": {

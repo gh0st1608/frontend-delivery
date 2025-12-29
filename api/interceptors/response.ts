@@ -1,12 +1,13 @@
-import type { ApiClient } from "../client";
 import { handleApiError } from "@/utils/error-handler";
+import { AxiosInstance } from "axios";
 
-export default function attachResponseInterceptor(api: ApiClient) {
+
+export default function attachResponseInterceptor(api: AxiosInstance) {
   api.interceptors.response.use(
-    response => response,
+    (response) => response,
     async (error) => {
-      const handled = await handleApiError(error);
-      return Promise.reject(handled);
+      const handledError = await handleApiError(error);
+      return Promise.reject(handledError);
     }
   );
 }
