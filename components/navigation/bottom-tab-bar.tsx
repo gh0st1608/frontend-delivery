@@ -1,9 +1,11 @@
-import { View, TouchableOpacity, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
+import { useCartStore } from "@/store/car-store";
 
 export default function BottomTabBar() {
   const pathname = usePathname();
+  const totalItems = useCartStore((state) => state.totalItems);
 
   const isActive = (route: string) => pathname.startsWith(route);
 
@@ -24,19 +26,28 @@ export default function BottomTabBar() {
           onPress={() => router.push("/bookmark")}
         />
 
-        {/* FAB CENTRAL */}
+        {/* FAB CENTRAL - CART */}
         <TouchableOpacity
           style={styles.fab}
           onPress={() => router.push("/cart")}
+          activeOpacity={0.85}
         >
           <Ionicons name="bag-outline" size={26} color="#fff" />
+
+          {totalItems > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {totalItems > 9 ? "9+" : totalItems}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* NOTIFICATIONS */}
         <TabIcon
           icon="notifications-outline"
-          active={isActive("/notifications")}
-          onPress={() => router.push("/notifications")}
+          active={isActive("/notification")}
+          onPress={() => router.push("/notification")}
         />
 
         {/* PROFILE */}
@@ -117,5 +128,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: -28,
+    position: "relative",
+  },
+
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -6,
+    backgroundColor: "#E53935",
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

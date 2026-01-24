@@ -4,7 +4,6 @@ import { View, ActivityIndicator } from "react-native";
 
 export default function AuthLayout() {
   const { status } = useAuth();
-  console.log("status auth", status);
   if (status === "checking") {
     return (
       <View style={{ flex: 1, justifyContent: "center" }}>
@@ -20,7 +19,7 @@ export default function AuthLayout() {
 
   // ❌ Ya logueado completamente → fuera de auth
   if (status === "authenticated") {
-    return <Redirect href="/(app)/home" />;
+    return <Redirect href="/home" />;
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

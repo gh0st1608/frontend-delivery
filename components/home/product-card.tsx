@@ -9,12 +9,14 @@ export default function ProductCard({
   price,
   imageUrl,
   onPress,
+  onAdd,
   variant = "carousel",
 }: {
   name: string;
   price: number;
   imageUrl: string;
   onPress: () => void;
+  onAdd: () => void;
   variant?: Variant;
 }) {
   return (
@@ -41,7 +43,11 @@ export default function ProductCard({
         <ThemedText style={styles.price}>S/ {price.toFixed(2)}</ThemedText>
       </View>
 
-      <TouchableOpacity style={styles.addButton}>
+       <TouchableOpacity
+        style={styles.addButton}
+        onPress={onAdd}
+        hitSlop={10}
+      >
         <ThemedText style={styles.addText}>+</ThemedText>
       </TouchableOpacity>
     </TouchableOpacity>

@@ -10,7 +10,7 @@ export interface ListCategoriesResponse extends BaseResponse {
 }
 
 export interface GetCategoryByIdResponse extends BaseResponse {
-  product: Category
+  category: Category
 }
 
 export interface Category {

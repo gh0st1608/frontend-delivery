@@ -19,11 +19,13 @@ import { useProducts } from "@/hooks/product/use-products";
 import { useAuth } from "@/hooks/use-auth";
 import { router } from "expo-router";
 import { useCategories } from "@/hooks/category/use-categories";
+import { useCarts } from "@/hooks/cart/use-cart"
 
 export default function MainPageScreen() {
   const { user } = useAuth();
   const { products, fetchProducts } = useProducts();
   const { categories, fetchCategories } = useCategories();
+  const { addToCart } = useCarts();
 
   const insets = useSafeAreaInsets(); // 🔥 clave
 
@@ -106,6 +108,7 @@ export default function MainPageScreen() {
                   params: { productId: item.productId.toString() },
                 })
               }
+              onAdd={() => addToCart(item)}
             />
           )}
         />
@@ -134,6 +137,7 @@ export default function MainPageScreen() {
                     params: { productId: item.productId.toString() },
                   })
                 }
+                onAdd={() => addToCart(item)}
               />
             )}
           />

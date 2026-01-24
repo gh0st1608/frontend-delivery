@@ -4,7 +4,6 @@ import { ActivityIndicator, View } from "react-native";
 
 export default function Index() {
   const { status } = useAuth();
-  console.log("status index", status);
   if (status === "checking") {
     return (
       <View style={{ flex: 1, justifyContent: "center" }}>
@@ -20,7 +19,6 @@ export default function Index() {
 
   // 🧭 ONBOARDING
   if (status === "onboardingRequired") {
-    console.log("entro al route de onboardingRequired de index app");
     return <Redirect href="/onboarding/choose-category" />;
   }
 
@@ -30,5 +28,5 @@ export default function Index() {
   }
 
   // ✅ LISTO
-  return <Redirect href="/(app)/home" />;
+  return <Redirect href="/home" />;
 }
