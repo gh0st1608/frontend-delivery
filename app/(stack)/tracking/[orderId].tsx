@@ -3,58 +3,55 @@ import { useLocalSearchParams, router } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
 import { MapRoute } from "@/components/tracking/map-route.web";
 import { CourierCard } from "@/components/tracking/courier-card";
-import { useCourierTracking } from "@/hooks/tracking/use-courier-tracking";
+import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
 
 export default function TrackingScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
-  const { data, loading } = useCourierTracking(orderId);
+  const { status, tracking, routeCoordinates } = useOrderTracking(orderId);
 
-  if (loading) {
+  // 🔵 WAITING
+  if (status === "WAITING") {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" />
+        <ThemedText>Looking for courier...</ThemedText>
       </View>
     );
   }
 
-  if (!data) return null;
+  // 🟢 ASSIGNED
+  if (status === "ASSIGNED") {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+        <ThemedText>Courier assigned. Getting location...</ThemedText>
+      </View>
+    );
+  }
 
+  // 🚀 TRACKING
+  if (!tracking) return null;
+  console.log("tracking", tracking);
   return (
     <View style={styles.container}>
-      <BaseHeader
-        title="Tracking"
-        rightIcon="arrow-back"
-        onRightPress={() => router.back()}
-      />
+      <BaseHeader title="Tracking" />
 
-      {/* 🗺️ Map */}
       <View style={styles.mapContainer}>
         <MapRoute
-          courier={data.location}
-          destination={data.destination}
+          courier={tracking.location}
+          pickup={tracking.pickup}
+          dropoff={tracking.dropoff}
+          phase={tracking.phase}
+          route={routeCoordinates}
         />
       </View>
 
-      {/* 📦 Bottom Card */}
       <View style={styles.bottomContainer}>
-        <CourierCard courier={data.courier}
-        etaMinutes={data.etaMinutes} 
+        <CourierCard
+          courier={tracking.courier}
+          etaMinutes={tracking.eta.etaMinutes}
         />
-
-        <View style={styles.etaCard}>
-          <ThemedText style={styles.location}>
-            Los Angeles / California
-          </ThemedText>
-
-          <ThemedText style={styles.address}>
-            3252 Hillhaven Drive
-          </ThemedText>
-
-          <ThemedText style={styles.eta}>
-            Arrive time {data.etaMinutes} min
-          </ThemedText>
-        </View>
       </View>
     </View>
   );
@@ -65,15 +62,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F6F6F6",
   },
+
   mapContainer: {
     flex: 1,
-    minHeight: 300,          // 👈 CRÍTICO para web
+    minHeight: 300, // importante en web
     backgroundColor: "#EEE",
   },
+
   loader: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    gap: 12,
+  },
+
+  waitingText: {
+    fontSize: 14,
+    color: "#666",
   },
 
   bottomContainer: {

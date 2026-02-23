@@ -1,29 +1,55 @@
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCheckoutStore } from "@/store/checkout-store";
+import { MapPicker } from "@/components/tracking/map-picker.web";
+import { useState } from "react";
 
 export default function DeliveryAddress() {
-  const { address } = useCheckoutStore();
+  const { address, updateAddressFromCoordinates, loadingAddress } =
+    useCheckoutStore();
+
+  const [visible, setVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Delivery Address</Text>
+    <>
+      <View style={styles.container}>
+        <Text style={styles.title}>Delivery Address</Text>
 
-      <View style={styles.card}>
-        <View style={styles.icon}>
-          <Ionicons name="location-outline" size={18} />
+        <View style={styles.card}>
+          <View style={styles.icon}>
+            <Ionicons name="location-outline" size={18} />
+          </View>
+
+          <View style={styles.info}>
+            <Text style={styles.city}>
+              {loadingAddress ? "Loading location..." : address.city}
+            </Text>
+            <Text style={styles.street}>{address.street}</Text>
+          </View>
+
+          <TouchableOpacity onPress={() => setVisible(true)}>
+            <Ionicons name="pencil-outline" size={18} />
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.info}>
-          <Text style={styles.city}>{address.city}</Text>
-          <Text style={styles.street}>{address.street}</Text>
-        </View>
-
-        <TouchableOpacity>
-          <Ionicons name="pencil-outline" size={18} />
-        </TouchableOpacity>
       </View>
-    </View>
+
+      <Modal visible={visible} animationType="slide">
+        <MapPicker
+          lat={address.lat}
+          lng={address.lng}
+          onSelect={async (lat, lng) => {
+            await updateAddressFromCoordinates(lat, lng);
+          }}
+        />
+
+        <TouchableOpacity
+          style={styles.confirmButton}
+          onPress={() => setVisible(false)}
+        >
+          <Text style={{ color: "white" }}>Confirm Location</Text>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -75,5 +101,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#777",
     marginTop: 4,
+  },
+
+  confirmButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    backgroundColor: "black",
+    padding: 16,
+    borderRadius: 12,
   },
 });

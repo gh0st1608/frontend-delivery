@@ -1,16 +1,39 @@
-import { useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from "react-leaflet";
+import { useEffect, useRef, useState, useMemo } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  useMap,
+} from "react-leaflet";
 import L from "leaflet";
-//import "leaflet/dist/leaflet.css";
+
+type LatLngTuple = [number, number];
+
+type DeliveryPhase = "TO_PICKUP" | "TO_DROPOFF" | "DELIVERED";
 
 type Props = {
+  phase: DeliveryPhase;
   courier: { lat: number; lng: number };
-  destination: { lat: number; lng: number };
+  pickup: { lat: number; lng: number };
+  dropoff: { lat: number; lng: number };
+  route: LatLngTuple[];
 };
 
-// 🧭 Icono custom (opcional pero recomendado)
 const courierIcon = new L.Icon({
   iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const pickupIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684809.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const dropoffIcon = new L.Icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/1946/1946488.png",
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
@@ -27,8 +50,14 @@ function FixMapResize() {
   return null;
 }
 
-export function MapRoute({ courier, destination }: Props) {
-  const [position, setPosition] = useState<[number, number]>([
+export function MapRoute({
+  phase,
+  courier,
+  pickup,
+  dropoff,
+  route,
+}: Props) {
+  const [position, setPosition] = useState<LatLngTuple>([
     courier.lat,
     courier.lng,
   ]);
@@ -36,11 +65,18 @@ export function MapRoute({ courier, destination }: Props) {
   const prevPosition = useRef(position);
   const animationRef = useRef<number | null>(null);
 
-  // 🚗 Animación suave del courier
+  // 🎯 Determinar destino según fase
+  const destination = useMemo(() => {
+    if (phase === "TO_PICKUP") return pickup;
+    if (phase === "TO_DROPOFF") return dropoff;
+    return null;
+  }, [phase, pickup, dropoff]);
+
+  // 🚗 Animación suave
   const animateTo = (
-    from: [number, number],
-    to: [number, number],
-    duration = 1000
+    from: LatLngTuple,
+    to: LatLngTuple,
+    duration = 1000,
   ) => {
     const start = performance.now();
 
@@ -60,7 +96,6 @@ export function MapRoute({ courier, destination }: Props) {
     animationRef.current = requestAnimationFrame(step);
   };
 
-  // 🔄 Reaccionar a cambios del courier
   useEffect(() => {
     animateTo(prevPosition.current, [courier.lat, courier.lng]);
     prevPosition.current = [courier.lat, courier.lng];
@@ -74,32 +109,38 @@ export function MapRoute({ courier, destination }: Props) {
 
   return (
     <div style={{ height: "100%", width: "100%" }}>
-    <MapContainer
-      center={position}
-      zoom={15}
-      style={{ height: "100%", width: "100%", borderRadius: 16 }}
-    >
-      <FixMapResize />
-      <TileLayer
-        attribution="© OpenStreetMap"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <MapContainer
+        center={position}
+        zoom={15}
+        style={{ height: "100%", width: "100%", borderRadius: 16 }}
+      >
+        <FixMapResize />
 
-      {/* 🚗 Courier animado */}
-      <Marker position={position} icon={courierIcon} />
+        <TileLayer
+          attribution="© OpenStreetMap"
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
 
-      {/* 📍 Destino */}
-      <Marker position={[destination.lat, destination.lng]} />
+        {/* 🚗 Courier */}
+        <Marker position={position} icon={courierIcon} />
 
-      {/* 🛣️ Ruta (mock) */}
-      <Polyline
-        positions={[
-          position,
-          [destination.lat, destination.lng],
-        ]}
-        pathOptions={{ color: "#22C55E", weight: 4 }}
-      />
-    </MapContainer>
-  </div>
+        {/* 📦 Pickup */}
+        <Marker position={[pickup.lat, pickup.lng]} icon={pickupIcon} />
+
+        {/* 🏠 Dropoff */}
+        <Marker position={[dropoff.lat, dropoff.lng]} icon={dropoffIcon} />
+
+        {/* 🎯 Ruta activa */}
+        {route.length > 0 && destination && (
+          <Polyline
+            positions={route}
+            pathOptions={{
+              color: phase === "TO_PICKUP" ? "#3B82F6" : "#22C55E",
+              weight: 4,
+            }}
+          />
+        )}
+      </MapContainer>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useCategories } from "@/hooks/category/use-categories";
 import { useAuth } from "@/hooks/use-auth";
-import { PreferenceService } from "@/api/services/preference.service";
+import { PreferenceService } from "@/api/http/services/preference.service";
 
 const MAX_CATEGORIES = 3;
 

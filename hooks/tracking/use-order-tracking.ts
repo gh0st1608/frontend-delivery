@@ -1,37 +1,95 @@
-import { useEffect, useState } from "react";
-//import { OrderTracking } from "@/types/tracking";
-import { orderTrackingMock } from "@/mocks/order-tracking";
-//import { TrackingService } from "@/services/tracking.service";
+import { useEffect, useRef, useState } from "react";
+import { TrackingSocketService } from "@/api/socket/services/tracking.socket.service";
+import { OrderTrackingSocketEvent } from "@/api/socket/types/order";
+import { OrderService } from "@/api/http/services/order.service";
+import { MapsService } from "@/api/http/services/maps.service";
 
-export function useOrderTracking(orderId: string) {
-  //const [data, setData] = useState<OrderTracking | null>(null);
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+type TrackingStatus = "WAITING" | "ASSIGNED" | "TRACKING";
+
+export function useOrderTracking(orderId?: string) {
+  const serviceRef = useRef<TrackingSocketService | null>(null);
+  const lastRouteFetchRef = useRef<number>(0);
+
+  const [status, setStatus] = useState<TrackingStatus>("WAITING");
+  const [tracking, setTracking] =
+    useState<OrderTrackingSocketEvent | null>(null);
+
+  const [routeCoordinates, setRouteCoordinates] =
+    useState<[number, number][]>([]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-
     if (!orderId) return;
 
-    const res = setTimeout(() => {
-      setData(orderTrackingMock);
-      setLoading(false);
-    }, 600);
+    let isMounted = true;
 
-    /* const fetchTracking = async () => {
-      try {
-        const res = await TrackingService.getOrderTracking(orderId);
-        setData(res);
-      } finally {
-        setLoading(false);
+    async function initialize() {
+      if (!orderId) return;
+      console.log('orderId',orderId)
+      const service = new TrackingSocketService(orderId);
+      serviceRef.current = service;
+      service.connect();
+
+      service.subscribeCourierAssigned(() => {
+        setStatus("ASSIGNED");
+      });
+
+      service.subscribeTrackingUpdated(async (payload) => {
+        setTracking(payload);
+        setStatus("TRACKING");
+
+        if (payload.phase === "DELIVERED") {
+          setRouteCoordinates([]);
+          return;
+        }
+
+        const now = Date.now();
+        if (now - lastRouteFetchRef.current < 10000) return;
+        lastRouteFetchRef.current = now;
+
+        // 🔥 destino depende de la fase
+        const destination =
+          payload.phase === "TO_PICKUP"
+            ? payload.pickup
+            : payload.dropoff;
+
+        try {
+          const route = await MapsService.getRoute(
+            payload.location,
+            destination
+          );
+
+          if (isMounted && route.length > 1) {
+            setRouteCoordinates(route);
+          }
+        } catch (error) {
+          console.error("Route fetch failed", error);
+        }
+      });
+
+      // snapshot inicial
+      const {
+        order: { statusDelivery },
+      } = await OrderService.getOrderStatusDelivery(orderId);
+
+      if (!isMounted) return;
+
+      if (statusDelivery === "ASSIGNED") {
+        setStatus("ASSIGNED");
       }
-    }; */
+    }
 
-    /* fetchTracking();
-    interval = setInterval(fetchTracking, 5000); */ // polling
+    initialize();
 
-    return () => clearInterval(res);
+    return () => {
+      isMounted = false;
+      serviceRef.current?.disconnect();
+      serviceRef.current = null;
+    };
   }, [orderId]);
 
-  return { data, loading };
+  return {
+    status,
+    tracking,
+    routeCoordinates,
+  };
 }

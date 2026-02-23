@@ -15,6 +15,7 @@ export default function ProductCard({
   name: string;
   price: number;
   imageUrl: string;
+  storeId: string;
   onPress: () => void;
   onAdd: () => void;
   variant?: Variant;

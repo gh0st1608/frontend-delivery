@@ -16,6 +16,7 @@ export interface GetProductByIdResponse extends BaseResponse {
 export interface Product {
   active: boolean;
   productId: string;
+  storeId: string;
   name: string;
   description: string;
   price: number;

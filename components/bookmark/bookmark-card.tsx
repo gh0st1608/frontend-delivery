@@ -2,7 +2,7 @@
 import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/themed-text";
-import { Product } from "@/api/types/product";
+import { Product } from "@/api/http/types/product";
 
 export function BookmarkCard({
   product,

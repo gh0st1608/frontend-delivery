@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { Product } from "@/api/types/product";
-import { ProductService } from "@/api/services/product.service";
+import { Product } from "@/api/http/types/product";
+import { ProductService } from "@/api/http/services/product.service";
 
 export function useProductDetail() {
   const [productDetail, setProductDetail] = useState<Product | null>(null);

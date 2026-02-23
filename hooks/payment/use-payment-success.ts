@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import { PaymentService } from "@/api/services/payment.service";
+import { PaymentService } from "@/api/http/services/payment.service";
 
 export function usePaymentSuccess() {
   const { token, PayerID } = useLocalSearchParams<{
@@ -11,6 +11,8 @@ export function usePaymentSuccess() {
   }>();
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
+  const [orderId, setOrderId] = useState('')
+
   useEffect(() => {
     if (!token) {
       router.replace("/payment/failure");
@@ -19,7 +21,7 @@ export function usePaymentSuccess() {
 
     const confirmPayment = async () => {
       try {
-        await PaymentService.confirmPayment({
+        const { payment } = await PaymentService.confirmPayment({
           token,
           PayerID,
           provider: 'Paypal'
@@ -30,6 +32,7 @@ export function usePaymentSuccess() {
         );
 
         setConfirmed(true);
+        setOrderId(payment.orderId)
       } catch (error) {
         console.error("Payment confirmation failed", error);
         router.replace("/payment/failure");
@@ -44,5 +47,6 @@ export function usePaymentSuccess() {
   return {
     loading,
     confirmed,
+    orderId
   };
 }

@@ -13,12 +13,28 @@ export interface CreatePaymentPaypalPayload {
   cancelUrl: string;
 }
 
+export interface ConfirmPaymentPaypalPayload {
+  token: string;
+  PayerID: string;
+  provider: string;
+}
+
 
 // ----------- Responses -----------
 
 export interface CreatePaymentPaypalResponse extends BaseResponse {
   payment : {
+    providerOrderId: string;
+    redirectUrl : string;
     paymentId: string;
-    redirectUrl : string
+  }
+}
+
+export interface ConfirmPaymentPaypalResponse extends BaseResponse {
+  payment : {
+    orderId: string;
+    paymentId: string;
+    providerPaymentId : string;
+    providerPaymentStatus: string;
   }
 }

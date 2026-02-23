@@ -4,6 +4,9 @@ import { BaseResponse } from "./common";
 // ----------- Payloads -----------
 export interface CreateOrderPayload {
   userId: string;
+  storeId: string;
+  deliveryLat: number;
+  deliveryLng: number;
   items: Cart[];
 }
 
@@ -18,6 +21,12 @@ export interface CreateOrderResponse extends BaseResponse {
 export interface ListOrdersResponse extends BaseResponse {
   items: Order[];
   nextCursor: string;
+}
+
+export interface GetOrderStatusDeliveryResponse extends BaseResponse {
+  order : {
+    statusDelivery: string;
+  }
 }
 
 export interface Order {

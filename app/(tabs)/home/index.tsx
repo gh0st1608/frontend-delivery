@@ -102,6 +102,7 @@ export default function MainPageScreen() {
               name={item.name}
               price={item.price}
               imageUrl={item.image}
+              storeId={item.storeId}
               onPress={() =>
                 router.push({
                   pathname: "/product/[productId]",
@@ -131,6 +132,7 @@ export default function MainPageScreen() {
                 name={item.name}
                 price={item.price}
                 imageUrl={item.image}
+                storeId={item.storeId}
                 onPress={() =>
                   router.push({
                     pathname: "/product/[productId]",

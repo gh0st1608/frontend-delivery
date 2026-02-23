@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { ProductService } from "@/api/services/product.service";
-import { ApiParamsRequest } from "@/api/types/common";
-import { Product } from "@/api/types/product";
+import { ProductService } from "@/api/http/services/product.service";
+import { ApiParamsRequest } from "@/api/http/types/common";
+import { Product } from "@/api/http/types/product";
 
 const DEFAULT_PARAMS: ApiParamsRequest = {
   search: "",
@@ -24,7 +24,7 @@ export const useProducts = () => {
           ...DEFAULT_PARAMS,
           ...params,
         });
-
+        console.log('data',data)
         setProducts(data.items);
       } catch (err) {
         console.error("❌ Error loading products", err);

@@ -6,9 +6,9 @@ import React, {
   useState,
 } from "react";
 import { Storage } from "../utils/storage";
-import { AuthService } from "../api/services/auth.service";
-import { User } from "@/api/types/user";
-import { AuthStatus } from "@/api/types/auth";
+import { AuthService } from "../api/http/services/auth.service";
+import { User } from "@/api/http/types/user";
+import { AuthStatus } from "@/api/http/types/auth";
 
 interface AuthContextProps {
   user: User | null;

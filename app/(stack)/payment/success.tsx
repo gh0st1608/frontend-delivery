@@ -5,8 +5,7 @@ import Animated, { FadeIn, ZoomIn } from "react-native-reanimated";
 import { usePaymentSuccess } from "@/hooks/payment/use-payment-success";
 
 export default function PaymentSuccessScreen() {
-  const { loading, confirmed } = usePaymentSuccess();
-
+  const { loading, orderId, confirmed } = usePaymentSuccess();
   if (loading) {
     return (
       <View style={styles.container}>
@@ -36,7 +35,10 @@ export default function PaymentSuccessScreen() {
         <TouchableOpacity
           style={styles.primaryButton}
           activeOpacity={0.85}
-          onPress={() => router.replace("/(stack)/tracking/[orderId]")}
+          onPress={() => router.replace({ 
+            pathname: "/(stack)/tracking/[orderId]",
+            params: { orderId }}
+          )}
         >
           <Text style={styles.primaryButtonText}>Go to Tracking</Text>
         </TouchableOpacity>

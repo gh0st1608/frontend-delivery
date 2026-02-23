@@ -1,6 +1,6 @@
 // hooks/bookmark/use-bookmarks.ts
 import { useCallback, useState } from "react";
-import { Product } from "@/api/types/product";
+import { Product } from "@/api/http/types/product";
 
 export function useBookmarks() {
   const [bookmarks, setBookmarks] = useState<Product[]>([]);

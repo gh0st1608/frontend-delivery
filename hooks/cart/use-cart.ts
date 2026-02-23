@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
-import { CartService } from "@/api/services/cart.service";
+import { CartService } from "@/api/http/services/cart.service";
 import { useAuth } from "@/hooks/use-auth";
 import { useCartStore } from "@/store/car-store";
-import { Product } from "@/api/types/product";
+import { Product } from "@/api/http/types/product";
 
 export const useCarts = () => {
   const { user } = useAuth();
@@ -25,6 +25,7 @@ export const useCarts = () => {
         return {
           ...item,
           image: product?.image ?? "",
+          storeId: product?.storeId ?? "",
         };
       });
 
@@ -54,6 +55,7 @@ export const useCarts = () => {
         addItem({
           ...payload,
           image: product.image, // ✅ UI enrichment
+          storeId: product.storeId
         });
       } catch (err) {
         console.error(err);

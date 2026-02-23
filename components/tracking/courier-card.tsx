@@ -8,9 +8,8 @@ import {
 import { ThemedText } from "@/components/themed-text";
 
 interface Courier {
+  id: string;
   name: string;
-  role: string;
-  avatarUrl: string;
 }
 
 interface Props {
@@ -27,7 +26,7 @@ export function CourierCard({
   return (
     <View style={styles.card}>
       <Image
-        source={{ uri: courier.avatarUrl }}
+        source={{ uri: 'https://goo.su/914zCnu' }}
         style={styles.avatar}
       />
 
@@ -36,7 +35,7 @@ export function CourierCard({
           {courier.name}
         </ThemedText>
         <ThemedText style={styles.role}>
-          {courier.role}
+          {courier.id}
         </ThemedText>
 
         <ThemedText style={styles.eta}>

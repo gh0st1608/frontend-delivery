@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
-import { Category } from "@/api/types/category";
-import { CategoryService } from "@/api/services/category.service";
-import { ApiParamsRequest } from "@/api/types/common";
+import { Category } from "@/api/http/types/category";
+import { CategoryService } from "@/api/http/services/category.service";
+import { ApiParamsRequest } from "@/api/http/types/common";
 
 const DEFAULT_PARAMS: ApiParamsRequest = {
   search: "",

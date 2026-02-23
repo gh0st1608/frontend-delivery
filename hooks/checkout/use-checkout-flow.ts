@@ -1,18 +1,17 @@
-import { useState, useCallback } from "react";
-import { Platform } from "react-native";
+import { useCartStore } from "@/store/car-store";
+import { useCreateOrder } from "../order/use-order";
+import { useCallback, useState } from "react";
+import { PaymentStatus } from "@/api/http/types/payment";
+import { useCheckoutStore } from "@/store/checkout-store";
+import { PaymentService } from "@/api/http/services/payment.service";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
+import { Platform } from "react-native";
 import { router } from "expo-router";
-import { useCreateOrder } from "../order/use-order";
-import { PaymentService } from "@/api/services/payment.service";
-import { PaymentStatus } from "@/api/types/payment";
-import { useCartStore } from "@/store/car-store";
 
 export function useCheckoutFlow() {
   const { createOrder } = useCreateOrder();
   const total = useCartStore((s) => s.total);
-
-
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<PaymentStatus | null>(null);
@@ -23,10 +22,21 @@ export function useCheckoutFlow() {
     setError(null);
 
     try {
-      // 1️⃣ Crear orden
-      const orderId = await createOrder();
+      const checkoutStore = useCheckoutStore.getState();
 
-      // 2️⃣ URLs correctas por plataforma
+      // 1️⃣ Garantizar geocoding
+      await checkoutStore.ensureAddressGeocoded();
+
+      const { address } = useCheckoutStore.getState();
+
+      if (address.lat == null || address.lng == null) {
+        throw new Error("Address not geocoded");
+      }
+
+      // 2️⃣ Crear orden pasando coordenadas
+      const orderId = await createOrder(address.lat, address.lng);
+
+      // 3️⃣ URLs por plataforma
       const successUrl =
         Platform.OS === "web"
           ? `${window.location.origin}/payment/success`
@@ -37,8 +47,10 @@ export function useCheckoutFlow() {
           ? `${window.location.origin}/payment/failure`
           : Linking.createURL("payment/failure");
 
-      // 3️⃣ Crear pago PayPal
-      const { payment : { redirectUrl }} = await PaymentService.createPaypalPayment({
+      // 4️⃣ Crear pago
+      const {
+        payment: { redirectUrl },
+      } = await PaymentService.createPaypalPayment({
         orderId,
         amount: total,
         currency: "USD",
@@ -49,7 +61,6 @@ export function useCheckoutFlow() {
 
       setStatus("pending");
 
-      // 4️⃣ Redirección correcta
       if (Platform.OS === "web") {
         window.location.assign(redirectUrl);
       } else {

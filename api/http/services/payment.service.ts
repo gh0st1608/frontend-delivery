@@ -1,14 +1,15 @@
 import paymentApi from "../clients/payment.client";
 import { ApiRequest, ApiResponse, ApiResponseError } from "../types/common";
 import {
+  ConfirmPaymentPaypalPayload,
+  ConfirmPaymentPaypalResponse,
   CreatePaymentPaypalPayload,
   CreatePaymentPaypalResponse,
-  PaymentProvider,
 } from "../types/payment";
 
 export const PaymentService = {
   async createPaypalPayment(
-    payload: CreatePaymentPaypalPayload
+    payload: CreatePaymentPaypalPayload,
   ): Promise<CreatePaymentPaypalResponse> {
     const request: ApiRequest<{ Payment: CreatePaymentPaypalPayload }> = {
       Data: {
@@ -26,18 +27,18 @@ export const PaymentService = {
 
     return res.data.Data;
   },
-  async confirmPayment(payload: {
-    token: string;
-    PayerID: string;
-    provider: PaymentProvider
-  }) {
-    const request = {
+  async confirmPayment(
+    payload: ConfirmPaymentPaypalPayload,
+  ): Promise<ConfirmPaymentPaypalResponse> {
+    const request: ApiRequest<{ Payment: ConfirmPaymentPaypalPayload }> = {
       Data: {
         Payment: payload,
       },
     };
 
-    const res = await paymentApi.post("/confirm", request);
+    const res = await paymentApi.post<
+      ApiResponse<ConfirmPaymentPaypalResponse>  | ApiResponseError
+    >("/confirm", request);
 
     if ("Error" in res.data) {
       throw res.data.Error;
