@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCheckoutStore } from "@/store/checkout-store";
-import { MapPicker } from "@/components/tracking/map-picker.web";
+import { MapPicker } from "@/components/tracking/map-picker";
 import { useState } from "react";
 
 export default function DeliveryAddress() {

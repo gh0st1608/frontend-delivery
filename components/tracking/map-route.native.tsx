@@ -1,19 +1,31 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet } from "react-native";
+import React, { useEffect, useRef, useMemo } from "react";
+import { StyleSheet } from "react-native";
 import MapView, {
   Marker,
   Polyline,
   AnimatedRegion,
-  Region
 } from "react-native-maps";
 
+type LatLngTuple = [number, number];
+
+type DeliveryPhase = "TO_PICKUP" | "TO_DROPOFF" | "DELIVERED";
+
 type Props = {
+  phase: DeliveryPhase;
   courier: { lat: number; lng: number };
-  destination: { lat: number; lng: number };
+  pickup: { lat: number; lng: number };
+  dropoff: { lat: number; lng: number };
+  route: LatLngTuple[];
 };
 
-export function MapRoute({ courier, destination }: Props) {
-  // 🧠 AnimatedRegion correcto
+export function MapRoute({
+  phase,
+  courier,
+  pickup,
+  dropoff,
+  route,
+}: Props) {
+
   const courierPosition = useRef(
     new AnimatedRegion({
       latitude: courier.lat,
@@ -23,19 +35,25 @@ export function MapRoute({ courier, destination }: Props) {
     })
   ).current;
 
-  // 🚗 Animar movimiento del courier
   const animateCourier = (lat: number, lng: number) => {
-    courierPosition.timing({
-  latitude: lat,
-  longitude: lng,
-  duration: 1000,
-  useNativeDriver: false,
-} as Animated.TimingAnimationConfig & Region).start(); // 👈 cast necesario por bug de typings
-  };
+  courierPosition.timing({
+    latitude: lat,
+    longitude: lng,
+    duration: 800,
+    useNativeDriver: false,
+  } as any).start();
+};
 
   useEffect(() => {
     animateCourier(courier.lat, courier.lng);
   }, [courier.lat, courier.lng]);
+
+  // 🎯 destino según fase
+  const destination = useMemo(() => {
+    if (phase === "TO_PICKUP") return pickup;
+    if (phase === "TO_DROPOFF") return dropoff;
+    return null;
+  }, [phase, pickup, dropoff]);
 
   return (
     <MapView
@@ -47,28 +65,36 @@ export function MapRoute({ courier, destination }: Props) {
         longitudeDelta: 0.01,
       }}
     >
-      {/* 🚗 Courier animado */}
-      <Marker.Animated
-        coordinate={courierPosition as any} // 👈 cast necesario
-      />
+      {/* 🚗 courier */}
+      <Marker.Animated coordinate={courierPosition as any} />
 
-      {/* 📍 Destino */}
+      {/* 📦 pickup */}
       <Marker
         coordinate={{
-          latitude: destination.lat,
-          longitude: destination.lng,
+          latitude: pickup.lat,
+          longitude: pickup.lng,
         }}
       />
 
-      {/* 🛣️ Ruta (mock) */}
-      <Polyline
-        coordinates={[
-          { latitude: courier.lat, longitude: courier.lng },
-          { latitude: destination.lat, longitude: destination.lng },
-        ]}
-        strokeWidth={4}
-        strokeColor="#22C55E"
+      {/* 🏠 dropoff */}
+      <Marker
+        coordinate={{
+          latitude: dropoff.lat,
+          longitude: dropoff.lng,
+        }}
       />
+
+      {/* 🛣 ruta */}
+      {route.length > 0 && destination && (
+        <Polyline
+          coordinates={route.map(([lat, lng]) => ({
+            latitude: lat,
+            longitude: lng,
+          }))}
+          strokeWidth={4}
+          strokeColor={phase === "TO_PICKUP" ? "#3B82F6" : "#22C55E"}
+        />
+      )}
     </MapView>
   );
 }
@@ -76,8 +102,5 @@ export function MapRoute({ courier, destination }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    borderRadius: 16,
-    overflow: "hidden",
-    backgroundColor: "#F5F5F5",
   },
 });

@@ -1,10 +1,11 @@
 import { View, StyleSheet, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
-import { MapRoute } from "@/components/tracking/map-route.web";
+import { MapRoute } from "@/components/tracking/map-route";
 import { CourierCard } from "@/components/tracking/courier-card";
 import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
+import { DestinationCard } from "@/components/tracking/destination-card";
 
 export default function TrackingScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
@@ -50,6 +51,11 @@ export default function TrackingScreen() {
       <View style={styles.bottomContainer}>
         <CourierCard
           courier={tracking.courier}
+        />
+        <DestinationCard
+          orderId={orderId}
+          city={tracking.dropoff.city}
+          address={tracking.dropoff.address}
           etaMinutes={tracking.eta.etaMinutes}
         />
       </View>
@@ -64,9 +70,11 @@ const styles = StyleSheet.create({
   },
 
   mapContainer: {
-    flex: 1,
-    minHeight: 300, // importante en web
-    backgroundColor: "#EEE",
+    height: 320,
+    marginHorizontal: 16,
+    marginTop: 10,
+    borderRadius: 20,
+    overflow: "hidden",
   },
 
   loader: {
@@ -82,10 +90,7 @@ const styles = StyleSheet.create({
   },
 
   bottomContainer: {
-    position: "absolute",
-    bottom: 20,
-    left: 16,
-    right: 16,
+    padding: 16,
     gap: 12,
   },
 

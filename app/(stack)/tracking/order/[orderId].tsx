@@ -3,80 +3,109 @@ import { useLocalSearchParams, router } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
 import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
-import { Ionicons } from "@expo/vector-icons";
+
+import { DestinationCard } from "@/components/tracking/destination-card";
+import { OrderTimeline } from "@/components/tracking/order-timeline";
+
+type Step = {
+  key: string;
+  title: string;
+  time: string;
+  completed: boolean;
+};
+
+export function buildTimeline(phase: string, etaMinutes?: number): Step[] {
+  return [
+    {
+      key: "order",
+      title: "Order received",
+      time: "Now",
+      completed: true,
+    },
+    {
+      key: "pickup",
+      title: "Courier picking up order",
+      time: "",
+      completed:
+        phase === "TO_PICKUP" ||
+        phase === "TO_DROPOFF" ||
+        phase === "DELIVERED",
+    },
+    {
+      key: "delivery",
+      title: "Courier delivering order",
+      time: etaMinutes ? `${etaMinutes} min` : "",
+      completed: phase === "TO_DROPOFF" || phase === "DELIVERED",
+    },
+    {
+      key: "done",
+      title: "Delivered",
+      time: "",
+      completed: phase === "DELIVERED",
+    },
+  ];
+}
 
 export default function TrackingOrderScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
-  const { data, loading } = useOrderTracking(orderId);
 
-  if (loading) {
+  const { status, tracking } = useOrderTracking(orderId);
+
+  if (status === "WAITING") {
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" />
+        <ThemedText>Looking for courier...</ThemedText>
       </View>
     );
   }
 
-  if (!data) return null;
+  if (status === "ASSIGNED") {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+        <ThemedText>Courier assigned...</ThemedText>
+      </View>
+    );
+  }
+
+  if (!tracking) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+        <ThemedText>Loading tracking...</ThemedText>
+      </View>
+    );
+  }
+
+  const steps = buildTimeline(tracking.phase);
 
   return (
     <View style={styles.container}>
       <BaseHeader
         title="Tracking Order"
-        rightIcon="arrow-back"
-        onRightPress={() => router.back()}
       />
 
-      {/* 📍 Address */}
-      <View style={styles.addressCard}>
-        <Ionicons name="location-outline" size={20} />
-        <View style={{ marginLeft: 10 }}>
-          <ThemedText style={styles.location}>
-            Los Angeles / California
-          </ThemedText>
-          <ThemedText style={styles.address}>
-            3252 Hillhaven Drive
-          </ThemedText>
-        </View>
+      <DestinationCard
+        orderId={orderId}
+        city={tracking.dropoff.city ?? ""}
+        address={tracking.dropoff.address ?? ""}
+        etaMinutes={tracking.eta?.etaMinutes ?? 0}
+      />
 
-        <ThemedText style={styles.eta}>
-          15–20 min
-        </ThemedText>
-      </View>
-
-      {/* 📦 Status */}
       <ThemedText style={styles.sectionTitle}>
         Order Status
       </ThemedText>
 
-      <View style={styles.timeline}>
-        {data.steps.map((step: any, index: number) => (
-          <View key={step.key} style={styles.step}>
-            <View
-              style={[
-                styles.dot,
-                step.completed && styles.dotCompleted,
-              ]}
-            />
+      <OrderTimeline steps={steps} />
 
-            <View style={styles.stepContent}>
-              <ThemedText style={styles.stepTitle}>
-                {step.title}
-              </ThemedText>
-              <ThemedText style={styles.stepTime}>
-                {step.time}
-              </ThemedText>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      {/* ✅ CTA */}
-      <TouchableOpacity style={styles.button}>
-        <ThemedText style={styles.buttonText}>
-          Confirm Delivery
-        </ThemedText>
-      </TouchableOpacity>
+      {status !== "DELIVERED" && (
+        <TouchableOpacity style={styles.button}>
+          <ThemedText style={styles.buttonText}>
+            Confirm Delivery
+          </ThemedText>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -94,72 +123,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  addressCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 20,
-  },
-
-  location: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
-
-  address: {
-    fontSize: 13,
-    color: "#666",
-  },
-
-  eta: {
-    marginLeft: "auto",
-    fontWeight: "700",
-  },
-
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 12,
-  },
-
-  timeline: {
-    backgroundColor: "#FFF",
-    borderRadius: 16,
-    padding: 16,
-  },
-
-  step: {
-    flexDirection: "row",
-    marginBottom: 16,
-  },
-
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#CCC",
-    marginTop: 6,
-  },
-
-  dotCompleted: {
-    backgroundColor: "#000",
-  },
-
-  stepContent: {
-    marginLeft: 12,
-  },
-
-  stepTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  stepTime: {
-    fontSize: 12,
-    color: "#777",
-    marginTop: 2,
   },
 
   button: {

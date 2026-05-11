@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  View,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import { View, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 
 interface Courier {
@@ -14,19 +9,19 @@ interface Courier {
 
 interface Props {
   courier: Courier;
-  etaMinutes: number;
   onCallPress?: () => void;
+  onChatPress?: () => void;
 }
 
 export function CourierCard({
   courier,
-  etaMinutes,
   onCallPress,
+  onChatPress,
 }: Props) {
   return (
     <View style={styles.card}>
       <Image
-        source={{ uri: 'https://goo.su/914zCnu' }}
+        source={{ uri: "https://goo.su/914zCnu" }}
         style={styles.avatar}
       />
 
@@ -34,42 +29,42 @@ export function CourierCard({
         <ThemedText style={styles.name}>
           {courier.name}
         </ThemedText>
-        <ThemedText style={styles.role}>
-          {courier.id}
+
+        <ThemedText style={styles.id}>
+          ID - {courier.id}
         </ThemedText>
 
-        <ThemedText style={styles.eta}>
-          Arrive time {etaMinutes} min
+        <ThemedText style={styles.role}>
+          Food Courier
         </ThemedText>
       </View>
 
-      <TouchableOpacity
-        style={styles.callButton}
-        onPress={onCallPress}
-      >
-        <ThemedText style={styles.callText}>📞</ThemedText>
-      </TouchableOpacity>
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.actionButton} onPress={onChatPress}>
+          <ThemedText>💬</ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.actionButton} onPress={onCallPress}>
+          <ThemedText>📞</ThemedText>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#000",
     borderRadius: 16,
-    padding: 14,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
   },
 
   avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
 
   info: {
@@ -78,33 +73,34 @@ const styles = StyleSheet.create({
   },
 
   name: {
-    fontSize: 15,
+    color: "#FFF",
+    fontSize: 16,
     fontWeight: "600",
   },
 
-  role: {
+  id: {
+    color: "#BBB",
     fontSize: 12,
-    color: "#777",
     marginTop: 2,
   },
 
-  eta: {
-    fontSize: 12,
-    marginTop: 6,
-    fontWeight: "500",
+  role: {
+    color: "#FFF",
+    fontSize: 13,
+    marginTop: 2,
   },
 
-  callButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#000",
+  actions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+
+  actionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#FFF",
     alignItems: "center",
     justifyContent: "center",
-  },
-
-  callText: {
-    color: "#FFF",
-    fontSize: 16,
   },
 });

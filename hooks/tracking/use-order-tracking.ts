@@ -4,18 +4,45 @@ import { OrderTrackingSocketEvent } from "@/api/socket/types/order";
 import { OrderService } from "@/api/http/services/order.service";
 import { MapsService } from "@/api/http/services/maps.service";
 
-type TrackingStatus = "WAITING" | "ASSIGNED" | "TRACKING";
+export type TrackingStatus =
+  | "WAITING"
+  | "ASSIGNED"
+  | "TRACKING"
+  | "DELIVERED";
+
+function mapDeliveryStatus(status: string): TrackingStatus {
+  switch (status) {
+    case "CREATED":
+      return "WAITING";
+
+    case "ASSIGNED":
+    case "PREPARING":
+      return "ASSIGNED";
+
+    case "PICKED_UP":
+    case "ON_THE_WAY":
+      return "TRACKING";
+
+    case "DELIVERED":
+      return "DELIVERED";
+
+    default:
+      return "WAITING";
+  }
+}
 
 export function useOrderTracking(orderId?: string) {
   const serviceRef = useRef<TrackingSocketService | null>(null);
   const lastRouteFetchRef = useRef<number>(0);
 
   const [status, setStatus] = useState<TrackingStatus>("WAITING");
-  const [tracking, setTracking] =
-    useState<OrderTrackingSocketEvent | null>(null);
+  const [tracking, setTracking] = useState<OrderTrackingSocketEvent | null>(
+    null,
+  );
 
-  const [routeCoordinates, setRouteCoordinates] =
-    useState<[number, number][]>([]);
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>(
+    [],
+  );
 
   useEffect(() => {
     if (!orderId) return;
@@ -24,41 +51,71 @@ export function useOrderTracking(orderId?: string) {
 
     async function initialize() {
       if (!orderId) return;
-      console.log('orderId',orderId)
       const service = new TrackingSocketService(orderId);
       serviceRef.current = service;
+
       service.connect();
 
       service.subscribeCourierAssigned(() => {
+        if (!isMounted) return;
         setStatus("ASSIGNED");
       });
 
       service.subscribeTrackingUpdated(async (payload) => {
-        setTracking(payload);
-        setStatus("TRACKING");
+        if (!isMounted) return;
+
+        let address = payload.dropoff.address;
+        let city = payload.dropoff.city;
+
+        try {
+          if (!address && !city) {
+            const reverse = await MapsService.reverseGeocode(
+              payload.dropoff.lat,
+              payload.dropoff.lng,
+            );
+
+            city = reverse.city;
+            address = reverse.fullAddress;
+          }
+        } catch (error) {
+          console.warn("Reverse geocode failed", error);
+        }
+
+        const enrichedTracking: OrderTrackingSocketEvent = {
+          ...payload,
+          dropoff: {
+            ...payload.dropoff,
+            city,
+            address,
+          },
+        };
+
+        setTracking(enrichedTracking);
 
         if (payload.phase === "DELIVERED") {
+          setStatus("DELIVERED");
           setRouteCoordinates([]);
           return;
         }
 
+        setStatus("TRACKING");
+
         const now = Date.now();
+
         if (now - lastRouteFetchRef.current < 10000) return;
+
         lastRouteFetchRef.current = now;
 
-        // 🔥 destino depende de la fase
         const destination =
-          payload.phase === "TO_PICKUP"
-            ? payload.pickup
-            : payload.dropoff;
+          payload.phase === "TO_PICKUP" ? payload.pickup : payload.dropoff;
 
         try {
           const route = await MapsService.getRoute(
             payload.location,
-            destination
+            destination,
           );
 
-          if (isMounted && route.length > 1) {
+          if (route.length > 1) {
             setRouteCoordinates(route);
           }
         } catch (error) {
@@ -66,15 +123,17 @@ export function useOrderTracking(orderId?: string) {
         }
       });
 
-      // snapshot inicial
-      const {
-        order: { statusDelivery },
-      } = await OrderService.getOrderStatusDelivery(orderId);
+      // SNAPSHOT INICIAL
+      try {
+        const {
+          order: { statusDelivery },
+        } = await OrderService.getOrderStatusDelivery(orderId);
 
-      if (!isMounted) return;
+        if (!isMounted) return;
 
-      if (statusDelivery === "ASSIGNED") {
-        setStatus("ASSIGNED");
+        setStatus(mapDeliveryStatus(statusDelivery));
+      } catch (error) {
+        console.error("Initial order status fetch failed", error);
       }
     }
 

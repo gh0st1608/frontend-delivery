@@ -6,7 +6,8 @@ import {
   useMap,
   useMapEvents,
 } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import "./leaflet.web.css";
 import { LocationSearchInput } from "./location-search-input.web";
 
 interface Props {
@@ -14,6 +15,12 @@ interface Props {
   lng?: number;
   onSelect: (lat: number, lng: number) => void;
 }
+
+const pickerIcon = new L.Icon({
+  iconUrl: "/icons/drop-off.png",
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
 
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -76,6 +83,7 @@ export function MapPicker({ lat, lng, onSelect }: Props) {
 
           <Marker
             position={position}
+            icon={pickerIcon}
             draggable
             eventHandlers={{
               dragend: (e) => {

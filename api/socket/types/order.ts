@@ -26,6 +26,8 @@ export interface OrderTrackingSocketEvent {
   dropoff: {
     lat: number;
     lng: number;
+    city: string;
+    address: string;
   };
   eta: {
     distanceKm: number;

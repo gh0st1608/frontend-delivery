@@ -7,6 +7,7 @@ import {
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import "./leaflet.web.css";
 
 type LatLngTuple = [number, number];
 
@@ -21,19 +22,19 @@ type Props = {
 };
 
 const courierIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconUrl: "/images/courier.png",
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
 
 const pickupIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684809.png",
+  iconUrl: "/images/pick-up.png",
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
 
 const dropoffIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/1946/1946488.png",
+  iconUrl: "/icons/drop-off.png",
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
@@ -122,7 +123,9 @@ export function MapRoute({
         />
 
         {/* 🚗 Courier */}
-        <Marker position={position} icon={courierIcon} />
+        <Marker position={position} icon={courierIcon}></Marker>
+        
+        
 
         {/* 📦 Pickup */}
         <Marker position={[pickup.lat, pickup.lng]} icon={pickupIcon} />
