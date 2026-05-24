@@ -20,7 +20,7 @@ interface AuthContextProps {
   setPassword: (password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
-  refreshUser:() => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({} as AuthContextProps);
@@ -32,17 +32,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshUser = useCallback(async () => {
     try {
-      console.log('entro al refresh user')
       const data = await AuthService.me();
       const currentUser = data.user;
-      console.log('currentUser',currentUser)
+
       setUser(currentUser);
-      console.log('currentUser.onboardingRequired',currentUser.onboardingRequired)
+
       if (currentUser.onboardingRequired) {
         setStatus("onboardingRequired");
         return;
       }
-      console.log('currentUser.onboardingRequired',currentUser.onboardingRequired)
+
       if (!currentUser.password) {
         setStatus("passwordRequired");
         return;
@@ -74,14 +73,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [status, refreshUser]);
 
-  // 🔑 Solo una vez al montar la app
   useEffect(() => {
     loadUser();
   }, [loadUser]);
 
-  // ---------------------------------------
-  // LOGIN
-  // ---------------------------------------
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const data = await AuthService.login({
@@ -92,18 +87,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       await Storage.set("access_token", data.Auth.accessToken);
       await Storage.set("refresh_token", data.Auth.refreshToken);
-
-      await loadUser(); // 🔥 CLAVE
+      await refreshUser();
 
       return true;
     } catch {
+      setUser(null);
+      setStatus("unauthenticated");
       return false;
     }
   };
 
-  // ---------------------------------------
-  // REGISTER
-  // ---------------------------------------
   const register = async (
     name: string,
     email: string,
@@ -118,19 +111,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       await Storage.set("access_token", response.Auth.accessToken);
       await Storage.set("refresh_token", response.Auth.refreshToken);
-
-      await loadUser(); // 🔥 CLAVE
+      await refreshUser();
 
       return true;
     } catch {
+      setUser(null);
       setStatus("unauthenticated");
       return false;
     }
   };
 
-  // ---------------------------------------
-  // EMAIL FLOW
-  // ---------------------------------------
   const verifyEmail = async (email: string): Promise<boolean> => {
     try {
       await AuthService.verifyEmail({ email });
@@ -145,10 +135,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const verifyCode = async (code: string): Promise<boolean> => {
     try {
       if (!pendingEmail) return false;
+
       const data = await AuthService.verifyCode({
         email: pendingEmail,
         code,
       });
+
       return data.User.verifyEmail ?? false;
     } catch {
       return false;
@@ -164,17 +156,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         password,
       });
 
-      await loadUser(); // 🔥 CLAVE
-
+      await refreshUser();
       return true;
     } catch {
       return false;
     }
   };
 
-  // ---------------------------------------
-  // LOGOUT
-  // ---------------------------------------
   const logout = async () => {
     await Storage.remove("access_token");
     await Storage.remove("refresh_token");
