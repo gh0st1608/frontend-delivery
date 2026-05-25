@@ -1,17 +1,20 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
-  TileLayer,
   Marker,
   Polyline,
+  TileLayer,
   useMap,
 } from "react-leaflet";
 import L from "leaflet";
+import { DeliveryPhase } from "@/api/socket/types/order";
+import {
+  isPickupPhase,
+  resolveTrackingDestination,
+} from "@/utils/tracking-phase";
 import "./leaflet.web.css";
 
 type LatLngTuple = [number, number];
-
-type DeliveryPhase = "TO_PICKUP" | "TO_DROPOFF" | "DELIVERED";
 
 type Props = {
   phase: DeliveryPhase;
@@ -62,28 +65,20 @@ export function MapRoute({
     courier.lat,
     courier.lng,
   ]);
-
   const prevPosition = useRef(position);
   const animationRef = useRef<number | null>(null);
 
-  // 🎯 Determinar destino según fase
   const destination = useMemo(() => {
-    if (phase === "TO_PICKUP") return pickup;
-    if (phase === "TO_DROPOFF") return dropoff;
-    return null;
+    return resolveTrackingDestination(phase, pickup, dropoff);
   }, [phase, pickup, dropoff]);
 
-  // 🚗 Animación suave
-  const animateTo = (
-    from: LatLngTuple,
-    to: LatLngTuple,
-    duration = 1000,
-  ) => {
+  useEffect(() => {
+    const from = prevPosition.current;
+    const to: LatLngTuple = [courier.lat, courier.lng];
     const start = performance.now();
 
     const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-
+      const progress = Math.min((now - start) / 1000, 1);
       const lat = from[0] + (to[0] - from[0]) * progress;
       const lng = from[1] + (to[1] - from[1]) * progress;
 
@@ -95,11 +90,7 @@ export function MapRoute({
     };
 
     animationRef.current = requestAnimationFrame(step);
-  };
-
-  useEffect(() => {
-    animateTo(prevPosition.current, [courier.lat, courier.lng]);
-    prevPosition.current = [courier.lat, courier.lng];
+    prevPosition.current = to;
 
     return () => {
       if (animationRef.current) {
@@ -122,23 +113,15 @@ export function MapRoute({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* 🚗 Courier */}
-        <Marker position={position} icon={courierIcon}></Marker>
-        
-        
-
-        {/* 📦 Pickup */}
+        <Marker position={position} icon={courierIcon} />
         <Marker position={[pickup.lat, pickup.lng]} icon={pickupIcon} />
-
-        {/* 🏠 Dropoff */}
         <Marker position={[dropoff.lat, dropoff.lng]} icon={dropoffIcon} />
 
-        {/* 🎯 Ruta activa */}
         {route.length > 0 && destination && (
           <Polyline
             positions={route}
             pathOptions={{
-              color: phase === "TO_PICKUP" ? "#3B82F6" : "#22C55E",
+              color: isPickupPhase(phase) ? "#3B82F6" : "#22C55E",
               weight: 4,
             }}
           />

@@ -3,9 +3,13 @@ import { useLocalSearchParams, router } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
 import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
-
 import { DestinationCard } from "@/components/tracking/destination-card";
 import { OrderTimeline } from "@/components/tracking/order-timeline";
+import {
+  isDeliveredPhase,
+  isDropoffPhase,
+  isPickupPhase,
+} from "@/utils/tracking-phase";
 
 type Step = {
   key: string;
@@ -27,21 +31,21 @@ export function buildTimeline(phase: string, etaMinutes?: number): Step[] {
       title: "Courier picking up order",
       time: "",
       completed:
-        phase === "TO_PICKUP" ||
-        phase === "TO_DROPOFF" ||
-        phase === "DELIVERED",
+        isPickupPhase(phase) ||
+        isDropoffPhase(phase) ||
+        isDeliveredPhase(phase),
     },
     {
       key: "delivery",
       title: "Courier delivering order",
       time: etaMinutes ? `${etaMinutes} min` : "",
-      completed: phase === "TO_DROPOFF" || phase === "DELIVERED",
+      completed: isDropoffPhase(phase) || isDeliveredPhase(phase),
     },
     {
       key: "done",
       title: "Delivered",
       time: "",
-      completed: phase === "DELIVERED",
+      completed: isDeliveredPhase(phase),
     },
   ];
 }

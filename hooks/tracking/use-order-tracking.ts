@@ -3,6 +3,10 @@ import { TrackingSocketService } from "@/api/socket/services/tracking.socket.ser
 import { OrderTrackingSocketEvent } from "@/api/socket/types/order";
 import { OrderService } from "@/api/http/services/order.service";
 import { MapsService } from "@/api/http/services/maps.service";
+import {
+  isDeliveredPhase,
+  resolveTrackingDestination,
+} from "@/utils/tracking-phase";
 
 export type TrackingStatus =
   | "WAITING"
@@ -39,7 +43,6 @@ export function useOrderTracking(orderId?: string) {
   const [tracking, setTracking] = useState<OrderTrackingSocketEvent | null>(
     null,
   );
-
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][]>(
     [],
   );
@@ -51,6 +54,7 @@ export function useOrderTracking(orderId?: string) {
 
     async function initialize() {
       if (!orderId) return;
+
       const service = new TrackingSocketService(orderId);
       serviceRef.current = service;
 
@@ -92,7 +96,7 @@ export function useOrderTracking(orderId?: string) {
 
         setTracking(enrichedTracking);
 
-        if (payload.phase === "DELIVERED") {
+        if (isDeliveredPhase(payload.phase)) {
           setStatus("DELIVERED");
           setRouteCoordinates([]);
           return;
@@ -106,24 +110,32 @@ export function useOrderTracking(orderId?: string) {
 
         lastRouteFetchRef.current = now;
 
-        const destination =
-          payload.phase === "TO_PICKUP" ? payload.pickup : payload.dropoff;
+        const destination = resolveTrackingDestination(
+          payload.phase,
+          payload.pickup,
+          payload.dropoff,
+        );
+
+        if (!destination) {
+          setRouteCoordinates([]);
+          return;
+        }
 
         try {
-          const route = await MapsService.getRoute(
-            payload.location,
-            destination,
-          );
+          const route = await MapsService.getRoute(payload.location, destination);
 
           if (route.length > 1) {
             setRouteCoordinates(route);
+            return;
           }
+
+          setRouteCoordinates([]);
         } catch (error) {
           console.error("Route fetch failed", error);
+          setRouteCoordinates([]);
         }
       });
 
-      // SNAPSHOT INICIAL
       try {
         const {
           order: { statusDelivery },

@@ -17,32 +17,33 @@ import { useAuth } from "@/hooks/use-auth";
 export default function VerifyEmailScreen() {
   const { verifyCode } = useAuth();
   const router = useRouter();
-  const [code, setCode] = useState<string>(""); // OTP code (single string)
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleVerifyCode = async () => {
     if (!code || code.trim().length < 4) {
-      Alert.alert(
-        "Código inválido",
-        "Por favor ingresa el código que recibiste."
-      );
+      Alert.alert("Codigo invalido", "Por favor ingresa el codigo que recibiste.");
       return;
     }
 
-    const ok = await verifyCode(code);
+    setLoading(true);
 
-    if (!ok) {
-      Alert.alert("Codigo Inválido", "El codigo no es válido.");
-      return;
+    try {
+      const ok = await verifyCode(code);
+
+      if (!ok) {
+        Alert.alert("Codigo invalido", "El codigo no es valido.");
+        return;
+      }
+
+      router.push("/auth/create-new-password");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/auth/create-new-password");
-
   };
 
   const handleResend = () => {
-    // TODO: llamar endpoint para reenviar código
-    Alert.alert("Enviado", "Se ha reenviado el código a tu correo.");
+    Alert.alert("Enviado", "Se ha reenviado el codigo a tu correo.");
   };
 
   return (
@@ -72,8 +73,8 @@ export default function VerifyEmailScreen() {
               placeholder="____"
               keyboardType="number-pad"
               value={code}
-              onChangeText={(t) =>
-                setCode(t.replace(/[^0-9]/g, "").slice(0, 6))
+              onChangeText={(text) =>
+                setCode(text.replace(/[^0-9]/g, "").slice(0, 6))
               }
               maxLength={6}
               placeholderTextColor="#AAA"

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  View,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -11,7 +10,6 @@ import {
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter } from "expo-router";
 
 export default function RegisterScreen() {
   const { register } = useAuth();
@@ -20,11 +18,15 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Por favor completa todos los campos.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Las contrasenas no coinciden.");
       return;
     }
 
@@ -34,10 +36,9 @@ export default function RegisterScreen() {
       const success = await register(name, email, password);
 
       if (!success) {
-        Alert.alert("Error", "No se pudo registrar. Inténtalo nuevamente.");
+        Alert.alert("Error", "No se pudo registrar. Intentalo nuevamente.");
         return;
       }
-
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function RegisterScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Correo electrónico"
+          placeholder="Correo electronico"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -68,7 +69,7 @@ export default function RegisterScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Contraseña"
+          placeholder="Contrasena"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -76,7 +77,7 @@ export default function RegisterScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Confirma Contraseña"
+          placeholder="Confirma contrasena"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry

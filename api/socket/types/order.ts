@@ -1,7 +1,6 @@
-export type DeliveryPhase =
-  | "TO_PICKUP"
-  | "TO_DROPOFF"
-  | "DELIVERED";
+import { TrackingPhase } from "@/utils/tracking-phase";
+
+export type DeliveryPhase = TrackingPhase;
 
 export interface CourierAssignedSocketEvent {
   orderId: string;

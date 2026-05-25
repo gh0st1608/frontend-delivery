@@ -23,27 +23,35 @@ export default function CreateNewPasswordScreen() {
 
   const validate = () => {
     if (!newPassword || newPassword.length < 8) {
-      Alert.alert("Error", "La contraseña debe tener al menos 8 caracteres");
+      Alert.alert("Error", "La contrasena debe tener al menos 8 caracteres");
       return false;
     }
+
     if (newPassword !== confirm) {
-      Alert.alert("Error", "Las contraseñas no coinciden");
+      Alert.alert("Error", "Las contrasenas no coinciden");
       return false;
     }
+
     return true;
   };
 
   const handleSubmit = async () => {
     if (!validate()) return;
-    setLoading(true);
-    
-    const ok = await setPassword(newPassword);
 
-    if (!ok) {
-      Alert.alert("Contraseña Inválido", "La contraseña no es válido.");
-      return;
+    setLoading(true);
+
+    try {
+      const ok = await setPassword(newPassword);
+
+      if (!ok) {
+        Alert.alert("Contrasena invalida", "La contrasena no es valida.");
+        return;
+      }
+
+      router.replace("/auth/verified-confirm");
+    } finally {
+      setLoading(false);
     }
-    router.replace("/auth/verified-confirm");
   };
 
   return (
@@ -69,7 +77,7 @@ export default function CreateNewPasswordScreen() {
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
-              placeholder="••••••••"
+              placeholder="********"
               secureTextEntry
               value={newPassword}
               onChangeText={setNewPassword}
@@ -86,7 +94,7 @@ export default function CreateNewPasswordScreen() {
           <View style={styles.inputBox}>
             <TextInput
               style={styles.input}
-              placeholder="••••••••"
+              placeholder="********"
               secureTextEntry
               value={confirm}
               onChangeText={setConfirm}

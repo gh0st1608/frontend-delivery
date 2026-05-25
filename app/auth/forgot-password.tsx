@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -16,36 +17,39 @@ import { useRouter } from "expo-router";
 export default function ForgotPasswordScreen() {
   const { verifyEmail } = useAuth();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleVerifyEmail = async () => {
     if (!email) {
-      Alert.alert("Error", "Por favor ingresa un correo válido.");
+      Alert.alert("Error", "Por favor ingresa un correo valido.");
       return;
     }
 
-    const ok = await verifyEmail(email);
+    setLoading(true);
 
-    if (!ok) {
-      Alert.alert(
-        "Correo inválido",
-        "El email no está registrado o no es válido."
-      );
-      return;
+    try {
+      const ok = await verifyEmail(email);
+
+      if (!ok) {
+        Alert.alert(
+          "Correo invalido",
+          "El email no esta registrado o no es valido."
+        );
+        return;
+      }
+
+      router.push("/auth/verify-email");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/auth/verify-email");
   };
 
   return (
     <ScrollView style={styles.scroll}>
       <ThemedView style={styles.container}>
-        {/* Header con flecha */}
         <View style={styles.menu}>
-          <TouchableOpacity
-            style={styles.menuBar}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.menuBar} onPress={() => router.back()}>
             <Image
               source={require("@/assets/images/forgot-password-img-arrow-left.svg")}
               style={styles.arrow}
@@ -59,9 +63,7 @@ export default function ForgotPasswordScreen() {
             </ThemedText>
           </View>
         </View>
-        {/* Ilustración */}
 
-        {/* Texto descriptivo */}
         <View style={styles.textBox}>
           <Image
             source={require("@/assets/images/forgot-password-img-illustration.png")}
@@ -73,7 +75,6 @@ export default function ForgotPasswordScreen() {
           </ThemedText>
         </View>
 
-        {/* Input */}
         <View style={styles.inputGroup}>
           <ThemedText type="defaultSemiBold" style={styles.label}>
             Email
@@ -86,22 +87,30 @@ export default function ForgotPasswordScreen() {
               placeholderTextColor="#AAA"
               value={email}
               onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
           </View>
         </View>
 
-        {/* Try another way */}
         <TouchableOpacity onPress={() => console.log("try another way")}>
           <ThemedText type="link" style={styles.tryAnother}>
             Try another way
           </ThemedText>
         </TouchableOpacity>
 
-        {/* Botón */}
-        <TouchableOpacity style={styles.sendButton} onPress={handleVerifyEmail}>
-          <ThemedText type="defaultSemiBold" style={styles.sendText}>
-            Send
-          </ThemedText>
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={handleVerifyEmail}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <ThemedText type="defaultSemiBold" style={styles.sendText}>
+              Send
+            </ThemedText>
+          )}
         </TouchableOpacity>
       </ThemedView>
     </ScrollView>
@@ -154,7 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-
   textBox: {
     marginTop: 300,
     width: 300,
@@ -165,7 +173,6 @@ const styles = StyleSheet.create({
     color: "#AAA",
     lineHeight: 22,
   },
-
   inputGroup: {
     width: 326,
     marginTop: 40,
@@ -186,13 +193,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555",
   },
-
   tryAnother: {
     marginTop: 20,
     fontSize: 16,
     textAlign: "center",
   },
-
   sendButton: {
     width: 327,
     backgroundColor: "#000",
