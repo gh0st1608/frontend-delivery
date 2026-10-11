@@ -1,6 +1,6 @@
 import orderApi from "../clients/order.client";
 import { ApiRequest, ApiResponse, ApiResponseError } from "../types/common";
-import { CreateOrderPayload, CreateOrderResponse, GetOrderStatusDeliveryResponse, ListOrdersResponse } from "../types/order";
+import { CreateOrderPayload, CreateOrderResponse, GetOrderStatusDeliveryResponse, ListOrdersResponse, PricingResponse } from "../types/order";
 
 export const OrderService = {
   async getOrderStatusDelivery(orderId: string) : Promise<GetOrderStatusDeliveryResponse> {
@@ -17,6 +17,18 @@ export const OrderService = {
     const res = await orderApi.get<
       ApiResponse<ListOrdersResponse> | ApiResponseError
     >(`/${orderId}`);
+
+    if ("Error" in res.data) {
+      throw res.data.Error;
+    }
+
+    return res.data.Data;
+  },
+  // Tarifa de envío (CLP) y tipo de cambio vigentes para el resumen
+  async getPricing(): Promise<PricingResponse> {
+    const res = await orderApi.get<
+      ApiResponse<PricingResponse> | ApiResponseError
+    >("/pricing");
 
     if ("Error" in res.data) {
       throw res.data.Error;

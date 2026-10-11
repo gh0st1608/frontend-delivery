@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/themed-text";
+import { formatCLP } from "@/utils/currency";
 
 type Variant = "carousel" | "grid";
 
@@ -41,7 +42,7 @@ export default function ProductCard({
           {name}
         </ThemedText>
 
-        <ThemedText style={styles.price}>S/ {price.toFixed(2)}</ThemedText>
+        <ThemedText style={styles.price}>{formatCLP(price)}</ThemedText>
       </View>
 
        <TouchableOpacity

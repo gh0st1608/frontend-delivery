@@ -1,15 +1,23 @@
 import { View, Text, StyleSheet } from "react-native";
 import { useCartStore } from "@/store/car-store";
+import { clpToUsd, formatCLP, formatUSD } from "@/utils/currency";
 import { COLORS } from "../themed-color";
 
 export default function CartSummary() {
-  const { subtotal, delivery, total } = useCartStore();
+  const { subtotal, delivery, total, usdClp } = useCartStore();
+  const totalUsd = clpToUsd(total, usdClp);
 
   return (
     <View style={styles.container}>
-      <Row label="Sub Total" value={`$${subtotal.toFixed(2)}`} />
-      <Row label="Free & Delivery" value={`$${delivery.toFixed(2)}`} />
-      <Row label="Total" value={`$${total.toFixed(2)}`} bold />
+      <Row label="Sub Total" value={formatCLP(subtotal)} />
+      <Row label="Delivery" value={formatCLP(delivery)} />
+      <Row label="Total" value={formatCLP(total)} bold />
+      {/* PayPal cobra en USD: se informa el equivalente antes de pagar */}
+      {total > 0 && totalUsd > 0 && (
+        <Text style={styles.usdNote}>
+          Se cobrará aprox. {formatUSD(totalUsd)} vía PayPal (1 USD = {formatCLP(usdClp)})
+        </Text>
+      )}
     </View>
   );
 }
@@ -50,6 +58,12 @@ const styles = StyleSheet.create({
   bold: {
     fontWeight: "700",
     fontSize: 16,
+  },
+
+  usdNote: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginTop: 8,
   },
 });
 

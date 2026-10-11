@@ -1,24 +1,25 @@
 import { create } from "zustand";
 import { CreateCartItemPayload } from "@/api/http/types/cart";
 
-export type CartItemUI = CreateCartItemPayload & {
-  image: string;
-  storeId: string; // importante: el item conoce su tienda
-};
+// El item conoce su tienda (storeId) e imagen: ambos se persisten en backend
+export type CartItemUI = CreateCartItemPayload;
 
 interface CartState {
   storeId: string | null;
   items: CartItemUI[];
   totalItems: number;
 
+  // Montos en CLP. deliveryFee y usdClp vienen de backend-order (Settings)
   subtotal: number;
   delivery: number;
   total: number;
+  deliveryFee: number;
+  usdClp: number;
 
+  setPricing: (pricing: { deliveryFeeClp: number; usdClp: number }) => void;
   setCart: (items: CartItemUI[]) => void;
   addItem: (item: CartItemUI) => void;
-  increment: (productId: string) => void;
-  decrement: (productId: string) => void;
+  setQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clear: () => void;
 }
@@ -33,12 +34,12 @@ const calculateTotalItems = (items: CartItemUI[]) =>
 const calculateSubtotal = (items: CartItemUI[]) =>
   items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-const calculateDelivery = (items: CartItemUI[]) =>
-  items.length > 0 ? 5 : 0;
+const calculateDelivery = (items: CartItemUI[], deliveryFee: number) =>
+  items.length > 0 ? deliveryFee : 0;
 
-const calculateCartTotals = (items: CartItemUI[]) => {
+const calculateCartTotals = (items: CartItemUI[], deliveryFee = 0) => {
   const subtotal = calculateSubtotal(items);
-  const delivery = calculateDelivery(items);
+  const delivery = calculateDelivery(items, deliveryFee);
   const total = subtotal + delivery;
 
   return {
@@ -60,15 +61,27 @@ export const useCartStore = create<CartState>((set, get) => ({
   subtotal: 0,
   delivery: 0,
   total: 0,
+  deliveryFee: 0,
+  usdClp: 0,
+
+  /* ---------------------------------- */
+  /* Parámetros de precio (tarifa de envío y tipo de cambio) */
+  /* ---------------------------------- */
+  setPricing: ({ deliveryFeeClp, usdClp }) =>
+    set({
+      deliveryFee: deliveryFeeClp,
+      usdClp,
+      ...calculateCartTotals(get().items, deliveryFeeClp),
+    }),
 
   /* ---------------------------------- */
   /* Set completo (ej: desde backend / storage) */
   /* ---------------------------------- */
   setCart: (items) =>
     set({
-      storeId: items.length > 0 ? items[0].storeId : null,
+      storeId: items.find((i) => i.storeId)?.storeId ?? null,
       items,
-      ...calculateCartTotals(items),
+      ...calculateCartTotals(items, get().deliveryFee),
     }),
 
   /* ---------------------------------- */
@@ -76,62 +89,45 @@ export const useCartStore = create<CartState>((set, get) => ({
   /* ---------------------------------- */
   addItem: (item) => {
     const { storeId, items: currentItems } = get();
-    console.log('storeId',storeId)
     // 🚫 No mezclar tiendas
     if (storeId && storeId !== item.storeId) {
       throw new Error("No se pueden mezclar productos de diferentes tiendas");
     }
 
-    const items = [...currentItems];
-    const existing = items.find(
+    const existing = currentItems.find(
       (i) => i.productId === item.productId,
     );
 
-    if (existing) {
-      existing.quantity += item.quantity;
-    } else {
-      items.push(item);
-    }
+    // Se crean objetos nuevos para que los selectores detecten el cambio
+    const items = existing
+      ? currentItems.map((i) =>
+          i.productId === item.productId
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i,
+        )
+      : [...currentItems, item];
 
     set({
       storeId: storeId ?? item.storeId,
       items,
-      ...calculateCartTotals(items),
+      ...calculateCartTotals(items, get().deliveryFee),
     });
   },
 
   /* ---------------------------------- */
-  /* Increment */
+  /* Set quantity (0 elimina el item) */
   /* ---------------------------------- */
-  increment: (productId) => {
-    const items = get().items.map((item) =>
-      item.productId === productId
-        ? { ...item, quantity: item.quantity + 1 }
-        : item,
-    );
-
-    set({
-      items,
-      ...calculateCartTotals(items),
-    });
-  },
-
-  /* ---------------------------------- */
-  /* Decrement */
-  /* ---------------------------------- */
-  decrement: (productId) => {
+  setQuantity: (productId, quantity) => {
     const items = get()
       .items.map((item) =>
-        item.productId === productId
-          ? { ...item, quantity: item.quantity - 1 }
-          : item,
+        item.productId === productId ? { ...item, quantity } : item,
       )
       .filter((item) => item.quantity > 0);
 
     set({
       storeId: items.length > 0 ? get().storeId : null,
       items,
-      ...calculateCartTotals(items),
+      ...calculateCartTotals(items, get().deliveryFee),
     });
   },
 
@@ -146,7 +142,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({
       storeId: items.length > 0 ? get().storeId : null,
       items,
-      ...calculateCartTotals(items),
+      ...calculateCartTotals(items, get().deliveryFee),
     });
   },
 

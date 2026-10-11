@@ -6,19 +6,27 @@ export interface CreateCartItemPayload {
   name: string;
   price: number;
   quantity: number;
+  storeId: string;
+  image: string;
+}
+
+export interface UpdateCartItemPayload {
+  quantity: number;
 }
 
 
 // ----------- Responses -----------
 export interface CreateCartItemResponse extends BaseResponse {
   cart : {
-    id : string
+    cartId : string
   }
 }
 
-export interface ListCartsResponse extends BaseResponse {
-  items: Cart[];
-  nextCursor: string;
+export interface GetCartResponse extends BaseResponse {
+  cart: {
+    items: Cart[];
+    total: number;
+  };
 }
 
 export interface Cart {
@@ -27,4 +35,6 @@ export interface Cart {
   name: string;
   price: number;
   quantity: number;
+  storeId?: string;
+  image?: string;
 }

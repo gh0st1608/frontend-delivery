@@ -8,7 +8,9 @@ import {
 } from "react-native";
 import { useRef, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { CartItemUI, useCartStore } from "@/store/car-store";
+import { CartItemUI } from "@/store/car-store";
+import { useCarts } from "@/hooks/cart/use-cart";
+import { formatCLP } from "@/utils/currency";
 import { COLORS } from "../themed-color";
 
 interface Props {
@@ -16,7 +18,7 @@ interface Props {
 }
 
 export default function CartItem({ item }: Props) {
-  const { increment, decrement, removeItem } = useCartStore();
+  const { updateQuantity, removeFromCart, loading } = useCarts();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
@@ -54,24 +56,31 @@ export default function CartItem({ item }: Props) {
 
       <View style={styles.info}>
         <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+        <Text style={styles.price}>{formatCLP(item.price)}</Text>
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity onPress={() => increment(item.productId)}>
+        <TouchableOpacity
+          disabled={loading}
+          onPress={() => updateQuantity(item.productId, item.quantity + 1)}
+        >
           <Ionicons name="add" size={16} />
         </TouchableOpacity>
 
         <Text style={styles.quantity}>{item.quantity}</Text>
 
-        <TouchableOpacity onPress={() => decrement(item.productId)}>
+        <TouchableOpacity
+          disabled={loading}
+          onPress={() => updateQuantity(item.productId, item.quantity - 1)}
+        >
           <Ionicons name="remove" size={16} />
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity
         style={styles.delete}
-        onPress={() => removeItem(item.productId)}
+        disabled={loading}
+        onPress={() => removeFromCart(item.productId)}
       >
         <Ionicons name="trash-outline" size={18} color="#fff" />
       </TouchableOpacity>

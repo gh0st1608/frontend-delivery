@@ -14,11 +14,18 @@ import CartHeader from "@/components/cart/cart-header";
 import { useEffect, useRef } from "react";
 import { router } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
+import { useCarts } from "@/hooks/cart/use-cart";
 
 export default function CartScreen() {
   const items = useCartStore((state) => state.items);
+  const { loadCart, loading } = useCarts();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const isDisabled = items.length === 0;
+
+  // Sincroniza con el carrito guardado en backend
+  useEffect(() => {
+    loadCart();
+  }, [loadCart]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -39,6 +46,13 @@ export default function CartScreen() {
         renderItem={({ item }) => <CartItem item={item} />}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
+        refreshing={loading}
+        onRefresh={loadCart}
+        ListEmptyComponent={
+          loading ? null : (
+            <Text style={styles.emptyText}>Tu carrito está vacío</Text>
+          )
+        }
       />
 
       <PromoCode />
@@ -84,6 +98,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 180, // espacio para summary + button
+  },
+
+  emptyText: {
+    textAlign: "center",
+    color: "#6B7280",
+    marginTop: 40,
+    fontSize: 15,
   },
 
   checkoutButton: {

@@ -3,6 +3,7 @@ import { View, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemedText } from "@/components/themed-text";
 import { Product } from "@/api/http/types/product";
+import { formatCLP } from "@/utils/currency";
 
 export function BookmarkCard({
   product,
@@ -20,7 +21,7 @@ export function BookmarkCard({
         <ThemedText style={styles.desc}>{product.description}</ThemedText>
 
         <View style={styles.footer}>
-          <ThemedText>S/ {product.price.toFixed(2)}</ThemedText>
+          <ThemedText>{formatCLP(product.price)}</ThemedText>
           <ThemedText style={styles.rating}>⭐ 4.7</ThemedText>
         </View>
       </View>

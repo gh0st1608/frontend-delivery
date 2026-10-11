@@ -37,3 +37,14 @@ export interface Order {
   status: string;
   active: boolean;
 }
+
+export interface PricingResponse extends BaseResponse {
+  pricing: {
+    currency: "CLP";
+    deliveryFeeClp: number;
+    deliveryFeeUsd: number;
+    exchangeRateUsdClp: number;
+    exchangeRateSource: "BANCO_CENTRAL" | "MANUAL" | "FALLBACK";
+    exchangeRateDate: string;
+  };
+}
