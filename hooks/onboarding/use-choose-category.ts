@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { Alert } from "react-native";
 import { useCategories } from "@/hooks/category/use-categories";
 import { useAuth } from "@/hooks/use-auth";
 import { PreferenceService } from "@/api/http/services/preference.service";
@@ -7,7 +8,7 @@ const MAX_CATEGORIES = 3;
 
 export function useChooseCategory() {
   const { user, status, refreshUser } = useAuth();
-  const { categories, loading, fetchCategories } = useCategories();
+  const { categories, loading, error, fetchCategories } = useCategories();
 
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
@@ -34,11 +35,16 @@ export function useChooseCategory() {
       setSaving(true);
 
       await PreferenceService.create({
-        userId: user.userId,
         categoryIds: selected,
       });
 
+      // refreshUser cambia el estado a "authenticated" y el layout redirige
       await refreshUser();
+    } catch (err: any) {
+      Alert.alert(
+        "Error",
+        err?.message || "No se pudieron guardar tus preferencias."
+      );
     } finally {
       setSaving(false);
     }
@@ -47,6 +53,8 @@ export function useChooseCategory() {
   return {
     categories,
     loading,
+    error,
+    fetchCategories,
     selected,
     saving,
     toggleCategory,

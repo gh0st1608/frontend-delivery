@@ -14,6 +14,8 @@ export default function ChooseCategoryScreen() {
   const {
     categories,
     loading,
+    error,
+    fetchCategories,
     selected,
     toggleCategory,
     continueFlow,
@@ -35,6 +37,13 @@ export default function ChooseCategoryScreen() {
         numColumns={2}
         keyExtractor={(item) => item.categoryId}
         columnWrapperStyle={styles.row}
+        ListEmptyComponent={
+          error ? (
+            <TouchableOpacity onPress={() => fetchCategories()}>
+              <Text style={styles.subtitle}>{error}. Toca para reintentar.</Text>
+            </TouchableOpacity>
+          ) : null
+        }
         renderItem={({ item }) => {
           const isSelected = selected.includes(item.categoryId);
 

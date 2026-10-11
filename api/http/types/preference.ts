@@ -1,7 +1,7 @@
 import { BaseResponse } from "./common";
 // ----------- Payloads -----------
+// El usuario lo determina el backend a partir del access token
 export interface CreatePreferencePayload {
-  userId: string;
   categoryIds: string[];
 }
 
