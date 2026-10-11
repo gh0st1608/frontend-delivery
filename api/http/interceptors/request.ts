@@ -1,12 +1,15 @@
 import { AxiosInstance } from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TokenStorage, isWeb } from "@/utils/token-storage";
 
 export default function attachRequestInterceptor(api: AxiosInstance) {
-  api.interceptors.request.use(async (config) => {
-    const token = await AsyncStorage.getItem("access_token");
+  api.interceptors.request.use((config) => {
+    // El access token vive solo en memoria
+    const token = TokenStorage.getAccessToken();
+
+    config.headers = config.headers ?? {};
+    config.headers["X-Client-Type"] = isWeb ? "web" : "mobile";
 
     if (token) {
-      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
     }
 

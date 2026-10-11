@@ -39,7 +39,7 @@ export default function SettingsScreen() {
 
       <View style={styles.userCard}>
         <Image
-          source={{ uri: user?.image || "https://i.pravatar.cc/150" }}
+          source={{ uri: user?.photo || "https://i.pravatar.cc/150" }}
           style={styles.avatar}
         />
 

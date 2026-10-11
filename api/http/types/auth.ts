@@ -26,22 +26,20 @@ export interface VerifyCodePayload {
 export interface SetPasswordPayload {
   email: string;
   password: string;
+  code: string;
 }
 
 // ----------- Responses -----------
+// refreshToken solo llega en móvil; en web viaja en una cookie HttpOnly
 export interface LoginResponse extends BaseResponse {
   Auth: {
     accessToken: string;
-    refreshToken: string;
+    refreshToken?: string;
+    expiresIn: number;
   };
 }
 
-export interface RegisterResponse extends BaseResponse {
-  Auth: {
-    accessToken: string;
-    refreshToken: string;
-  };
-}
+export type RegisterResponse = LoginResponse;
 
 export interface VerifyEmailResponse extends BaseResponse {
   User: { 

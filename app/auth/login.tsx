@@ -30,13 +30,8 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
-      const ok = await login(email, password);
-
-      if (!ok) {
-        Alert.alert("Error", "Credenciales inválidas o usuario no autorizado");
-        return;
-      }
-      
+      // El AuthContext actualiza el estado y los layouts redirigen
+      await login(email.trim(), password);
     } catch (err: any) {
       Alert.alert("Error", err.message || "No se pudo iniciar sesión");
     } finally {

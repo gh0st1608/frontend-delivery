@@ -29,17 +29,13 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
 
     try {
-      const ok = await verifyEmail(email);
-
-      if (!ok) {
-        Alert.alert(
-          "Correo invalido",
-          "El email no esta registrado o no es valido."
-        );
-        return;
-      }
-
+      await verifyEmail(email.trim().toLowerCase());
       router.push("/auth/verify-email");
+    } catch (err: any) {
+      Alert.alert(
+        "Correo invalido",
+        err.message || "El email no esta registrado o no es valido."
+      );
     } finally {
       setLoading(false);
     }

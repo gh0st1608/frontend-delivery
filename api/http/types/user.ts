@@ -16,10 +16,11 @@ export interface GetUserByIdResponse extends BaseResponse {
 export interface User {
   userId: string;
   name: string;
-  lastname: boolean;
-  email: boolean;
-  password: boolean;
+  lastname: string;
+  email: string;
+  photo: string;
+  roles: string;
   onboardingRequired: boolean;
-  image: string;
+  hasPassword: boolean;
   active: boolean;
 }

@@ -41,14 +41,10 @@ export default function CreateNewPasswordScreen() {
     setLoading(true);
 
     try {
-      const ok = await setPassword(newPassword);
-
-      if (!ok) {
-        Alert.alert("Contrasena invalida", "La contrasena no es valida.");
-        return;
-      }
-
+      await setPassword(newPassword);
       router.replace("/auth/verified-confirm");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "No se pudo actualizar la contrasena.");
     } finally {
       setLoading(false);
     }

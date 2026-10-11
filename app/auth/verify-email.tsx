@@ -15,13 +15,14 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function VerifyEmailScreen() {
-  const { verifyCode } = useAuth();
+  const { verifyCode, resendCode } = useAuth();
   const router = useRouter();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleVerifyCode = async () => {
-    if (!code || code.trim().length < 4) {
+    if (!code || code.trim().length !== 4) {
       Alert.alert("Codigo invalido", "Por favor ingresa el codigo que recibiste.");
       return;
     }
@@ -29,21 +30,27 @@ export default function VerifyEmailScreen() {
     setLoading(true);
 
     try {
-      const ok = await verifyCode(code);
-
-      if (!ok) {
-        Alert.alert("Codigo invalido", "El codigo no es valido.");
-        return;
-      }
-
+      await verifyCode(code);
       router.push("/auth/create-new-password");
+    } catch (err: any) {
+      Alert.alert("Codigo invalido", err.message || "El codigo no es valido.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleResend = () => {
-    Alert.alert("Enviado", "Se ha reenviado el codigo a tu correo.");
+  const handleResend = async () => {
+    setResending(true);
+
+    try {
+      await resendCode();
+      setCode("");
+      Alert.alert("Enviado", "Se ha reenviado el codigo a tu correo.");
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "No se pudo reenviar el codigo.");
+    } finally {
+      setResending(false);
+    }
   };
 
   return (
@@ -74,9 +81,9 @@ export default function VerifyEmailScreen() {
               keyboardType="number-pad"
               value={code}
               onChangeText={(text) =>
-                setCode(text.replace(/[^0-9]/g, "").slice(0, 6))
+                setCode(text.replace(/[^0-9]/g, "").slice(0, 4))
               }
-              maxLength={6}
+              maxLength={4}
               placeholderTextColor="#AAA"
             />
           </View>
@@ -96,13 +103,17 @@ export default function VerifyEmailScreen() {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={handleResend} style={styles.ghostButton}>
+        <TouchableOpacity
+          onPress={handleResend}
+          style={styles.ghostButton}
+          disabled={resending}
+        >
           <ThemedText type="link">Resend code</ThemedText>
         </TouchableOpacity>
 
         <View style={styles.footer}>
           <ThemedText type="default" style={styles.small}>
-            Didn't receive it? Check your spam folder or try again.
+            Didn&apos;t receive it? Check your spam folder or try again.
           </ThemedText>
         </View>
       </ThemedView>

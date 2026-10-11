@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  View,
   TouchableOpacity,
   Image,
   ScrollView,
@@ -37,13 +36,6 @@ export default function VerifiedConfirmScreen() {
             Go to login
           </ThemedText>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => router.replace("/home")}
-        >
-          <ThemedText>Go to home</ThemedText>
-        </TouchableOpacity>
       </ThemedView>
     </ScrollView>
   );
@@ -74,5 +66,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   primaryText: { color: "#fff", fontSize: 16, fontWeight: "700" },
-  secondaryButton: { marginTop: 12 },
 });

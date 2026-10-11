@@ -25,6 +25,11 @@ export default function RegisterScreen() {
       return;
     }
 
+    if (password.length < 8) {
+      Alert.alert("Error", "La contrasena debe tener al menos 8 caracteres.");
+      return;
+    }
+
     if (password !== confirmPassword) {
       Alert.alert("Error", "Las contrasenas no coinciden.");
       return;
@@ -33,12 +38,10 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      const success = await register(name, email, password);
-
-      if (!success) {
-        Alert.alert("Error", "No se pudo registrar. Intentalo nuevamente.");
-        return;
-      }
+      // Tras registrarse el usuario queda logueado y pasa al onboarding
+      await register(name.trim(), email.trim(), password);
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "No se pudo registrar. Intentalo nuevamente.");
     } finally {
       setLoading(false);
     }

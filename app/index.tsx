@@ -22,9 +22,9 @@ export default function Index() {
     return <Redirect href="/onboarding/choose-category" />;
   }
 
-  // 🔐 PASSWORD
+  // 🔐 PASSWORD: se define verificando el correo (forgot → verify → create)
   if (status === "passwordRequired") {
-    return <Redirect href="/auth/create-password" />;
+    return <Redirect href="/auth/forgot-password" />;
   }
 
   // ✅ LISTO
