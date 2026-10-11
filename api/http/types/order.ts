@@ -42,6 +42,12 @@ export interface GetOrderByIdResponse extends BaseResponse {
   order: Order;
 }
 
+export interface ConfirmDeliveryResponse extends BaseResponse {
+  order: {
+    orderId: string;
+  };
+}
+
 export interface PricingResponse extends BaseResponse {
   pricing: {
     currency: "CLP";

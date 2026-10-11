@@ -1,4 +1,5 @@
 import { io, Socket } from "socket.io-client";
+import { TokenStorage } from "@/utils/token-storage";
 
 interface CreateSocketOptions {
   role?: "courier" | "consumer";
@@ -17,5 +18,8 @@ export function createSocket(options: CreateSocketOptions = {}): Socket {
     transports: ["websocket"],
     autoConnect: false, // 👈 control explícito
     query,
+    // Función: en cada (re)conexión se envía el access token vigente.
+    // El servidor solo deja seguir órdenes del propio usuario.
+    auth: (cb) => cb({ token: TokenStorage.getAccessToken() }),
   });
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TrackingSocketService } from "@/api/socket/services/tracking.socket.service";
 import { OrderTrackingSocketEvent } from "@/api/socket/types/order";
 import { OrderService } from "@/api/http/services/order.service";
@@ -13,6 +13,17 @@ export type TrackingStatus =
   | "ASSIGNED"
   | "TRACKING"
   | "DELIVERED";
+
+const STATUS_RANK: Record<TrackingStatus, number> = {
+  WAITING: 0,
+  ASSIGNED: 1,
+  TRACKING: 2,
+  DELIVERED: 3,
+};
+
+// El estado solo avanza: una respuesta HTTP lenta no pisa lo que ya llegó por socket
+const advanceStatus = (prev: TrackingStatus, next: TrackingStatus) =>
+  STATUS_RANK[next] > STATUS_RANK[prev] ? next : prev;
 
 function mapDeliveryStatus(status: string): TrackingStatus {
   switch (status) {
@@ -62,7 +73,7 @@ export function useOrderTracking(orderId?: string) {
 
       service.subscribeCourierAssigned(() => {
         if (!isMounted) return;
-        setStatus("ASSIGNED");
+        setStatus((prev) => advanceStatus(prev, "ASSIGNED"));
       });
 
       service.subscribeTrackingUpdated(async (payload) => {
@@ -102,7 +113,7 @@ export function useOrderTracking(orderId?: string) {
           return;
         }
 
-        setStatus("TRACKING");
+        setStatus((prev) => advanceStatus(prev, "TRACKING"));
 
         const now = Date.now();
 
@@ -143,7 +154,7 @@ export function useOrderTracking(orderId?: string) {
 
         if (!isMounted) return;
 
-        setStatus(mapDeliveryStatus(statusDelivery));
+        setStatus((prev) => advanceStatus(prev, mapDeliveryStatus(statusDelivery)));
       } catch (error) {
         console.error("Initial order status fetch failed", error);
       }
@@ -158,9 +169,26 @@ export function useOrderTracking(orderId?: string) {
     };
   }, [orderId]);
 
+  const [confirming, setConfirming] = useState(false);
+
+  const confirmDelivery = useCallback(async () => {
+    if (!orderId) return;
+
+    setConfirming(true);
+    try {
+      await OrderService.confirmDelivery(orderId);
+      setStatus("DELIVERED");
+      setRouteCoordinates([]);
+    } finally {
+      setConfirming(false);
+    }
+  }, [orderId]);
+
   return {
     status,
     tracking,
     routeCoordinates,
+    confirming,
+    confirmDelivery,
   };
 }

@@ -5,6 +5,7 @@ import {
   CreateOrderResponse,
   GetOrderByIdResponse,
   GetOrderStatusDeliveryResponse,
+  ConfirmDeliveryResponse,
   PricingResponse,
 } from "../types/order";
 
@@ -23,6 +24,18 @@ export const OrderService = {
     const res = await orderApi.get<
       ApiResponse<GetOrderByIdResponse> | ApiResponseError
     >(`/${orderId}`);
+
+    if ("Error" in res.data) {
+      throw res.data.Error;
+    }
+
+    return res.data.Data;
+  },
+  // El cliente confirma que recibió su pedido
+  async confirmDelivery(orderId: string): Promise<ConfirmDeliveryResponse> {
+    const res = await orderApi.patch<
+      ApiResponse<ConfirmDeliveryResponse> | ApiResponseError
+    >(`/${orderId}/confirm-delivery`);
 
     if ("Error" in res.data) {
       throw res.data.Error;

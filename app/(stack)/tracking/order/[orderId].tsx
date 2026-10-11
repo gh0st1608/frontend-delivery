@@ -1,5 +1,11 @@
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
 import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
@@ -53,7 +59,16 @@ export function buildTimeline(phase: string, etaMinutes?: number): Step[] {
 export default function TrackingOrderScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
 
-  const { status, tracking } = useOrderTracking(orderId);
+  const { status, tracking, confirming, confirmDelivery } =
+    useOrderTracking(orderId);
+
+  const handleConfirmDelivery = async () => {
+    try {
+      await confirmDelivery();
+    } catch (err: any) {
+      Alert.alert("Error", err?.message || "No se pudo confirmar la entrega");
+    }
+  };
 
   if (status === "WAITING") {
     return (
@@ -73,6 +88,14 @@ export default function TrackingOrderScreen() {
     );
   }
 
+  if (!tracking && status === "DELIVERED") {
+    return (
+      <View style={styles.loader}>
+        <ThemedText>Tu pedido fue entregado 🎉</ThemedText>
+      </View>
+    );
+  }
+
   if (!tracking) {
     return (
       <View style={styles.loader}>
@@ -82,7 +105,9 @@ export default function TrackingOrderScreen() {
     );
   }
 
-  const steps = buildTimeline(tracking.phase);
+  // La entrega confirmada se refleja aunque el socket aún no lo haya emitido
+  const phase = status === "DELIVERED" ? "DELIVERED" : tracking.phase;
+  const steps = buildTimeline(phase, tracking.eta?.etaMinutes);
 
   return (
     <View style={styles.container}>
@@ -104,10 +129,18 @@ export default function TrackingOrderScreen() {
       <OrderTimeline steps={steps} />
 
       {status !== "DELIVERED" && (
-        <TouchableOpacity style={styles.button}>
-          <ThemedText style={styles.buttonText}>
-            Confirm Delivery
-          </ThemedText>
+        <TouchableOpacity
+          style={[styles.button, confirming && { opacity: 0.6 }]}
+          onPress={handleConfirmDelivery}
+          disabled={confirming}
+        >
+          {confirming ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ThemedText style={styles.buttonText}>
+              Confirm Delivery
+            </ThemedText>
+          )}
         </TouchableOpacity>
       )}
     </View>

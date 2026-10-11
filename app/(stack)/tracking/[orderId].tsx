@@ -31,9 +31,24 @@ export default function TrackingScreen() {
     );
   }
 
-  // 🚀 TRACKING
-  if (!tracking) return null;
-  console.log("tracking", tracking);
+  // ✅ Entregado antes de recibir ubicaciones (p. ej. al reabrir la pantalla)
+  if (!tracking && status === "DELIVERED") {
+    return (
+      <View style={styles.loader}>
+        <ThemedText>Tu pedido fue entregado 🎉</ThemedText>
+      </View>
+    );
+  }
+
+  // 🚀 TRACKING: en camino pero aún sin la primera ubicación
+  if (!tracking) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" />
+        <ThemedText>Getting courier location...</ThemedText>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <BaseHeader title="Tracking" />
