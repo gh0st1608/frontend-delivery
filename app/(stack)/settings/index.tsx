@@ -92,10 +92,15 @@ function Option({
 }: {
   label: string;
   value?: string;
-  onPress: () => void;
+  onPress?: () => void;
 }) {
+  // Sin destino la opción se muestra deshabilitada en lugar de navegar a una ruta inexistente
   return (
-    <TouchableOpacity style={styles.option} onPress={onPress}>
+    <TouchableOpacity
+      style={[styles.option, !onPress && { opacity: 0.4 }]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
       <Text style={styles.optionText}>{label}</Text>
       <Text style={styles.optionValue}>{value ?? "›"}</Text>
     </TouchableOpacity>

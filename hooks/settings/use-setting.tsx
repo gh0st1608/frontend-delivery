@@ -14,11 +14,12 @@ export function useSettings() {
   const goBack = () => router.back();
 
   const goToAccount = () => router.push("/profile");
-  const goToLanguage = () => router.push("/settings/language");
-  const goToBookmarks = () => router.push("/bookmarks");
-  const goToFaqs = () => router.push("/faqs");
-  const goToPrivacy = () => router.push("/privacy");
-  const goToHelp = () => router.push("/help");
+  const goToBookmarks = () => router.push("/bookmark");
+  // Language, FAQs, Privacy y Help aún no tienen pantalla
+  const goToLanguage = undefined;
+  const goToFaqs = undefined;
+  const goToPrivacy = undefined;
+  const goToHelp = undefined;
 
   const toggleNotifications = () =>
     setNotificationsEnabled((prev) => !prev);
