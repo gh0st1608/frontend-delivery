@@ -30,17 +30,23 @@ Construida con **Expo (SDK 54)**, **React Native 0.81** y **Expo Router**. Corre
 npm install
 ```
 
-Crea un archivo `.env` en la raíz (está en `.gitignore`):
+Las variables se definen por entorno. Solo se versionan las plantillas:
+
+| Archivo | Uso |
+| --- | --- |
+| `.env.local` | Desarrollo con el backend local (`expo start`). Se crea desde `.env.local.example`; `infra-delivery/local/up.sh` lo crea y ajusta las URLs automáticamente |
+| `.env.production` | Build de producción (`expo export`), con las URLs del API Gateway en AWS. Se crea desde `.env.production.example` |
 
 ```env
-EXPO_PUBLIC_API_URL_AUTH=http://<HOST>:8080/auth
-EXPO_PUBLIC_API_URL_SHOP=http://<HOST>:8080/shop
-EXPO_PUBLIC_API_URL_CHECKOUT=http://<HOST>:8080/checkout
-EXPO_PUBLIC_API_URL_ORDER=http://<HOST>:8080/order
-EXPO_PUBLIC_API_URL_PAYMENT=http://<HOST>:8080/payment
+# .env.local
+EXPO_PUBLIC_API_URL_AUTH=http://<HOST>:3000/auth
+EXPO_PUBLIC_API_URL_SHOP=http://<HOST>:3002/shop
+EXPO_PUBLIC_API_URL_CHECKOUT=http://<HOST>:3003/checkout
+EXPO_PUBLIC_API_URL_ORDER=http://<HOST>:3004/order
+EXPO_PUBLIC_API_URL_PAYMENT=http://<HOST>:3005/payment
 EXPO_PUBLIC_SOCKET_URL=http://<HOST>:3004
-EXPO_PUBLIC_API_KEY_GOOGLE=<api key de Google>
 EXPO_PUBLIC_API_URL_GOOGLE=https://maps.googleapis.com/maps/api
+EXPO_PUBLIC_API_KEY_GOOGLE=<api key de Google>
 ```
 
 | Variable | Uso |
@@ -58,18 +64,29 @@ Cada URL incluye el prefijo del servicio, porque los servicios del front llaman 
 
 ## Conectar con el backend local
 
-El entorno de desarrollo del backend usa LocalStack (DynamoDB, EventBridge, SQS, SES) y un API Gateway local con nginx en el puerto `8080`. Ver la rama `infra` de backend-delivery (`infra-delivery/README.md`) y el README de la rama `gateway`.
+La forma recomendada es levantar todo (LocalStack, infraestructura, backends, datos de prueba y esta app) con un comando desde el repo del backend:
 
-`<HOST>` depende de dónde corre la app:
+```bash
+cd ../backend-delivery/infra-delivery/local
+./up.sh          # app web en http://localhost:8081
+./up.sh --lan    # app en tu celular con Expo Go (misma Wi-Fi)
+./down.sh        # detener
+```
+
+`up.sh` escribe en `.env.local` las URLs de los servicios según el modo y respeta el resto de tus variables. El detalle está en el README de la rama `infra` de backend-delivery (sección *Levantar todo en local*).
+
+Si levantas la app por tu cuenta (`npm start`), `<HOST>` en `.env.local` depende de dónde corre:
 
 | Dónde corre la app | `<HOST>` |
 | --- | --- |
 | Web en el mismo equipo | `localhost` |
 | Emulador Android | `10.0.2.2` |
 | Simulador iOS | `localhost` |
-| Dispositivo físico (Expo Go) | IP del equipo en la red local (p. ej. `192.168.1.20`), o la URL pública de ngrok |
+| Dispositivo físico (Expo Go) | IP del equipo en la red local (p. ej. `192.168.1.20`) |
 
-Para web, el origen de la app (por ejemplo `http://localhost:8081`) debe estar en `CORS_ORIGINS` de cada servicio. Si no, el navegador bloquea las peticiones.
+**Otros requisitos:**
+- **CORS (solo web):** el origen de la app (`http://localhost:8081`) debe estar en `CORS_ORIGINS` de cada servicio. Las plantillas `.env.local.example` del backend ya lo incluyen.
+- **Celular físico:** permite Node.js en el firewall para los puertos 3000-3005 y 8081.
 
 ## Scripts
 
@@ -206,6 +223,7 @@ npx expo export --platform web   # genera dist/
 - Los medios de pago con tarjeta, Apple Pay y Google Pay aún no están implementados.
 - Las opciones de ajustes Language, FAQs, Privacy y Help no tienen pantalla (se muestran deshabilitadas).
 - La versión web no tiene infraestructura de despliegue (ver [Web](#web)).
+- En una misma máquina, `.env.local` tiene prioridad sobre `.env.production` incluso al exportar. Si generas un build de producción en local, renombra antes `.env.local`.
 
 ## Ramas
 

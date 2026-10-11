@@ -42,3 +42,6 @@ app-example
 # generated native folders
 /ios
 /android
+# Variables por entorno: solo se versionan las plantillas
+.env.*
+!.env.*.example
