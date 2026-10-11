@@ -1,20 +1,22 @@
 version: 0.2
 
+# Solo compila la versión web y la deja como artefacto en dist/.
+# El despliegue (bucket S3 + CloudFront) se agregará cuando exista la
+# infraestructura del frontend en AWS.
+
 phases:
   install:
     runtime-versions:
-      nodejs: 18
+      # React Native 0.81 / Metro requieren Node >= 20.19.4
+      nodejs: 20
     commands:
-      - npm install --global expo-cli
-      - npm install
+      - npm ci
 
   build:
     commands:
       - npx expo export --platform web
 
-  post_build:
-    commands:
-      - echo "Subiendo archivos a S3..."
-      - aws s3 sync dist/ s3://foodstore.solutionserj.com/ --delete
-      - echo "Invalidando CloudFront..."
-      - aws cloudfront create-invalidation --distribution-id E1VD9H39FYQZIE --paths "/*"
+artifacts:
+  base-directory: dist
+  files:
+    - "**/*"
