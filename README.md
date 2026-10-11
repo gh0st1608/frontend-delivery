@@ -183,9 +183,13 @@ eas build --profile production --platform android
 
 El package de Android es `com.solutionserj.foodstoresdc` ([app.config.js](app.config.js)).
 
-Las variables `EXPO_PUBLIC_*` no se suben con el `.env`. Para los builds en EAS hay que definirlas como variables de entorno del proyecto en EAS o en el bloque `env` de cada perfil.
+Las variables `EXPO_PUBLIC_*` no se suben con el `.env`. Cada perfil de `eas.json` usa el entorno de EAS del mismo nombre (`environment`: `development`, `preview` o `production`), así que hay que definir esas variables en el proyecto de EAS:
 
-> ⚠️ El bloque `env` de `eas.json` define `API_URL`, que la app no usa (lee `EXPO_PUBLIC_*`) y que apunta a una API que ya no existe. Hay que reemplazarlo por las variables `EXPO_PUBLIC_*` cuando el backend se despliegue en AWS.
+```bash
+eas env:create --environment preview --name EXPO_PUBLIC_API_URL_AUTH --value https://<api>/auth --visibility plaintext
+```
+
+Para probar contra el backend local, usa Expo Go o un build `development` con el `.env` local.
 
 ### Web
 
@@ -195,15 +199,13 @@ Para generar el build web en local:
 npx expo export --platform web   # genera dist/
 ```
 
-> ⚠️ Por ahora la web no tiene dónde desplegarse: el backend corre solo en local (LocalStack) y la infraestructura anterior en AWS se eliminó. Antes de reutilizar [buildspec.yml](buildspec.yml) hay que actualizar dos cosas:
-> - el bucket `foodstore.solutionserj.com`, que ya no existe;
-> - el ID de CloudFront `E1VD9H39FYQZIE`, que pertenece a otro proyecto (appointment-backend).
+[buildspec.yml](buildspec.yml) (AWS CodeBuild, Node 20) solo compila la web y entrega `dist/` como artefacto. Todavía no publica en ningún lado: el backend corre por ahora en local (LocalStack) y la infraestructura anterior en AWS se eliminó. Cuando exista la infraestructura del frontend (bucket S3 + CloudFront), el despliegue se agrega en una fase `post_build`.
 
 ## Pendientes conocidos
 
 - Los medios de pago con tarjeta, Apple Pay y Google Pay aún no están implementados.
 - Las opciones de ajustes Language, FAQs, Privacy y Help no tienen pantalla (se muestran deshabilitadas).
-- `utils/storage.ts` ya no se usa (lo reemplazó `utils/token-storage.ts`).
+- La versión web no tiene infraestructura de despliegue (ver [Web](#web)).
 
 ## Ramas
 
