@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { PaymentService } from "@/api/http/services/payment.service";
+import { useCarts } from "@/hooks/cart/use-cart";
 
 export function usePaymentSuccess() {
   const { token, PayerID } = useLocalSearchParams<{
@@ -12,12 +13,18 @@ export function usePaymentSuccess() {
   const [loading, setLoading] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
   const [orderId, setOrderId] = useState('')
+  const { clearCart } = useCarts();
+  const confirmingRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!token) {
       router.replace("/payment/failure");
       return;
     }
+
+    // Evita confirmar dos veces el mismo token (re-montajes / StrictMode)
+    if (confirmingRef.current === token) return;
+    confirmingRef.current = token;
 
     const confirmPayment = async () => {
       try {
@@ -30,6 +37,9 @@ export function usePaymentSuccess() {
         await Haptics.notificationAsync(
           Haptics.NotificationFeedbackType.Success
         );
+
+        // El pedido ya está pagado: recién ahora se vacía el carrito
+        await clearCart();
 
         setConfirmed(true);
         setOrderId(payment.orderId)

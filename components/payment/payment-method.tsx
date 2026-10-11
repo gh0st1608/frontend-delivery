@@ -18,6 +18,7 @@ export default function PaymentMethod() {
 
       <PaymentOption
         label="Credit Card"
+        disabled
         icon={require("@/assets/icons/credit-pay.svg")}
         selected={paymentMethod === "credit-card"}
         onPress={() => setPaymentMethod("credit-card")}
@@ -25,6 +26,7 @@ export default function PaymentMethod() {
 
       <PaymentOption
         label="Apple Pay"
+        disabled
         icon={require("@/assets/icons/apple-pay.svg")}
         selected={paymentMethod === "apple-pay"}
         onPress={() => setPaymentMethod("apple-pay")}
@@ -32,6 +34,7 @@ export default function PaymentMethod() {
 
       <PaymentOption
         label="Google Pay"
+        disabled
         icon={require("@/assets/icons/google-pay.svg")}
         selected={paymentMethod === "google-pay"}
         onPress={() => setPaymentMethod("google-pay")}

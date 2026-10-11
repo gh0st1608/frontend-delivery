@@ -1,20 +1,22 @@
 import { useCartStore } from "@/store/car-store";
 import { useAuth } from "../use-auth";
 import { useCallback, useState } from "react";
-import { CreateOrderPayload } from "@/api/http/types/order";
+import { CreateOrderPayload, CreateOrderResponse } from "@/api/http/types/order";
 import { OrderService } from "@/api/http/services/order.service";
 
 export function useCreateOrder() {
   const { user } = useAuth();
   const storeId = useCartStore((s) => s.storeId);
   const items = useCartStore((s) => s.items);
-  const clearCart = useCartStore((s) => s.clear);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createOrder = useCallback(
-    async (deliveryLat: number, deliveryLng: number): Promise<string> => {
+    async (
+      deliveryLat: number,
+      deliveryLng: number,
+    ): Promise<CreateOrderResponse["order"]> => {
       if (!user) {
         throw new Error("User not authenticated");
       }
@@ -27,23 +29,20 @@ export function useCreateOrder() {
       setError(null);
 
       try {
+        // Precios, totales y usuario los calcula el backend
         const payload: CreateOrderPayload = {
-          userId: user.userId,
           storeId,
           deliveryLat,
           deliveryLng,
           items: items.map((item) => ({
             productId: item.productId,
-            name: item.name,
             quantity: item.quantity,
-            price: item.price,
           })),
         };
         const { order } = await OrderService.createOrder(payload);
 
-        clearCart();
-
-        return order.orderId;
+        // El carrito se vacía recién cuando el pago se confirma
+        return order;
       } catch (err) {
         setError("No se pudo crear la orden");
         throw err;
@@ -51,7 +50,7 @@ export function useCreateOrder() {
         setLoading(false);
       }
     },
-    [user, storeId, items, clearCart]
+    [user, storeId, items]
   );
 
   return {

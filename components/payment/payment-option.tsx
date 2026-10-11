@@ -11,6 +11,7 @@ interface Props {
   label: string;
   icon: any;
   selected: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }
 
@@ -18,17 +19,22 @@ export default function PaymentOption({
   label,
   icon,
   selected,
+  disabled = false,
   onPress,
 }: Props) {
   return (
     <TouchableOpacity
-      style={[styles.card, selected && styles.active]}
+      style={[styles.card, selected && styles.active, disabled && styles.disabled]}
       onPress={onPress}
+      disabled={disabled}
       activeOpacity={0.8}
     >
       <View style={styles.left}>
         <Image source={icon} style={styles.icon} />
-        <Text style={styles.label}>{label}</Text>
+        <View>
+          <Text style={styles.label}>{label}</Text>
+          {disabled && <Text style={styles.soon}>Próximamente</Text>}
+        </View>
       </View>
 
       <Ionicons
@@ -76,5 +82,15 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: "600",
+  },
+
+  disabled: {
+    opacity: 0.5,
+  },
+
+  soon: {
+    fontSize: 12,
+    color: "#6B7280",
+    marginTop: 2,
   },
 });

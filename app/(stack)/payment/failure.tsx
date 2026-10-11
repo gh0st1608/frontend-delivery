@@ -60,7 +60,9 @@ export default function PaymentFailure() {
         <TouchableOpacity
           style={styles.secondaryButton}
           activeOpacity={0.85}
-          onPress={() => router.back()}
+          // Al volver de PayPal no hay historial (web): se regresa al carrito,
+          // que sigue intacto porque solo se vacía al confirmar el pago
+          onPress={() => router.replace("/cart")}
         >
           <Text style={styles.secondaryButtonText}>
             Try Again

@@ -1,21 +1,36 @@
-import { Cart } from "./cart";
 import { BaseResponse } from "./common";
 
 // ----------- Payloads -----------
+// Solo producto y cantidad: precios y usuario los determina el backend
+export interface CreateOrderItemPayload {
+  productId: string;
+  quantity: number;
+}
+
 export interface CreateOrderPayload {
-  userId: string;
   storeId: string;
   deliveryLat: number;
   deliveryLng: number;
-  items: Cart[];
+  items: CreateOrderItemPayload[];
 }
 
 
 // ----------- Responses -----------
+// Montos en CLP (lo que ve el cliente) y su equivalente en USD (lo que cobra
+// PayPal), con el tipo de cambio congelado al crear la orden.
+export interface OrderTotals {
+  currency: "CLP";
+  subtotalClp: number;
+  deliveryFeeClp: number;
+  totalClp: number;
+  exchangeRateUsdClp: number;
+  totalUsd: number;
+}
+
 export interface CreateOrderResponse extends BaseResponse {
-  order : {
-    orderId : string
-  }
+  order: OrderTotals & {
+    orderId: string;
+  };
 }
 
 export interface ListOrdersResponse extends BaseResponse {
@@ -23,19 +38,8 @@ export interface ListOrdersResponse extends BaseResponse {
   nextCursor: string;
 }
 
-export interface GetOrderStatusDeliveryResponse extends BaseResponse {
-  order : {
-    statusDelivery: string;
-  }
-}
-
-export interface Order {
-  orderId: string;
-  userId: string;
-  items: Cart[];
-  totalAmount: number;
-  status: string;
-  active: boolean;
+export interface GetOrderByIdResponse extends BaseResponse {
+  order: Order;
 }
 
 export interface PricingResponse extends BaseResponse {
@@ -47,4 +51,35 @@ export interface PricingResponse extends BaseResponse {
     exchangeRateSource: "BANCO_CENTRAL" | "MANUAL" | "FALLBACK";
     exchangeRateDate: string;
   };
+}
+
+export type OrderDeliveryStatus =
+  | "CREATED"
+  | "ASSIGNED"
+  | "PREPARING"
+  | "PICKED_UP"
+  | "ON_THE_WAY"
+  | "DELIVERED"
+  | "CANCELED";
+
+export interface GetOrderStatusDeliveryResponse extends BaseResponse {
+  order : {
+    statusDelivery: OrderDeliveryStatus;
+  }
+}
+
+export interface OrderItem {
+  productId: string;
+  name: string;
+  price: number; // CLP
+  quantity: number;
+}
+
+export interface Order extends OrderTotals {
+  orderId: string;
+  userId: string;
+  storeId: string;
+  items: OrderItem[];
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELLED";
+  statusDelivery: OrderDeliveryStatus;
 }

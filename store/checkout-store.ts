@@ -29,7 +29,8 @@ interface CheckoutState {
 }
 
 export const useCheckoutStore = create<CheckoutState>((set, get) => ({
-  paymentMethod: "credit-card",
+  // Único medio de pago implementado en backend-payment
+  paymentMethod: "paypal",
 
   address: {
     city: "Los Angeles/California",
@@ -77,7 +78,7 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     }
 
     if (!address.street || !address.city) {
-      throw new Error("Address is incomplete");
+      throw new Error("La dirección de entrega está incompleta");
     }
 
     try {
@@ -97,7 +98,7 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     } catch (error) {
       console.error("Geocode failed:", error);
       set({ loadingAddress: false });
-      throw new Error("Address not geocoded test");
+      throw new Error("No se pudo ubicar la dirección de entrega");
     }
   },
 }));

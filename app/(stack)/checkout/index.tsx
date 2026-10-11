@@ -3,9 +3,14 @@ import PaymentMethod from "@/components/payment/payment-method";
 import DeliveryAddress from "@/components/checkout/delivery-address";
 import { BaseHeader } from "@/components/base-header";
 import { useCheckoutFlow } from "@/hooks/checkout/use-checkout-flow";
+import { useCartStore } from "@/store/car-store";
+import { clpToUsd, formatCLP, formatUSD } from "@/utils/currency";
 
 export default function CheckoutScreen() {
   const { startCheckout, loading } = useCheckoutFlow();
+  const total = useCartStore((s) => s.total);
+  const usdClp = useCartStore((s) => s.usdClp);
+  const totalUsd = clpToUsd(total, usdClp);
 
   return (
     <View style={styles.container}>
@@ -13,6 +18,13 @@ export default function CheckoutScreen() {
 
       <PaymentMethod />
       <DeliveryAddress />
+
+      {/* PayPal no opera con CLP: el cliente ve el equivalente que se cobrará */}
+      {totalUsd > 0 && (
+        <Text style={styles.chargeNote}>
+          Total {formatCLP(total)} · se cobrará aprox. {formatUSD(totalUsd)} en PayPal
+        </Text>
+      )}
 
       <TouchableOpacity
         style={[styles.button, loading && styles.buttonDisabled]}
@@ -51,5 +63,12 @@ const styles = StyleSheet.create({
   },
    buttonDisabled: {
     opacity: 0.6,
+  },
+
+  chargeNote: {
+    fontSize: 13,
+    color: "#6B7280",
+    textAlign: "center",
+    marginBottom: 12,
   },
 });

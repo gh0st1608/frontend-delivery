@@ -6,12 +6,11 @@ import { useCheckoutStore } from "@/store/checkout-store";
 import { PaymentService } from "@/api/http/services/payment.service";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
-import { Platform } from "react-native";
-import { router } from "expo-router";
+import { Alert, Platform } from "react-native";
 
 export function useCheckoutFlow() {
   const { createOrder } = useCreateOrder();
-  const total = useCartStore((s) => s.total);
+  const itemsCount = useCartStore((s) => s.items.length);
 
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<PaymentStatus | null>(null);
@@ -24,17 +23,25 @@ export function useCheckoutFlow() {
     try {
       const checkoutStore = useCheckoutStore.getState();
 
+      if (itemsCount === 0) {
+        throw new Error("Tu carrito está vacío");
+      }
+
+      if (checkoutStore.paymentMethod !== "paypal") {
+        throw new Error("Por ahora solo se acepta pago con PayPal");
+      }
+
       // 1️⃣ Garantizar geocoding
       await checkoutStore.ensureAddressGeocoded();
 
       const { address } = useCheckoutStore.getState();
 
       if (address.lat == null || address.lng == null) {
-        throw new Error("Address not geocoded");
+        throw new Error("No se pudo ubicar la dirección de entrega");
       }
 
       // 2️⃣ Crear orden pasando coordenadas
-      const orderId = await createOrder(address.lat, address.lng);
+      const { orderId } = await createOrder(address.lat, address.lng);
 
       // 3️⃣ URLs por plataforma
       const successUrl =
@@ -52,8 +59,6 @@ export function useCheckoutFlow() {
         payment: { redirectUrl },
       } = await PaymentService.createPaypalPayment({
         orderId,
-        amount: total,
-        currency: "USD",
         provider: "Paypal",
         successUrl,
         cancelUrl,
@@ -69,15 +74,17 @@ export function useCheckoutFlow() {
             WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
         });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      const message = e?.message || "No se pudo iniciar el pago";
       setStatus("failure");
-      setError("No se pudo completar el pago");
-      router.replace("/payment/failure");
+      setError(message);
+      // El pago aún no empezó: el usuario se queda en checkout para corregir
+      Alert.alert("Checkout", message);
     } finally {
       setLoading(false);
     }
-  }, [createOrder, total]);
+  }, [createOrder, itemsCount]);
 
   return {
     startCheckout,

@@ -1,6 +1,12 @@
 import orderApi from "../clients/order.client";
 import { ApiRequest, ApiResponse, ApiResponseError } from "../types/common";
-import { CreateOrderPayload, CreateOrderResponse, GetOrderStatusDeliveryResponse, ListOrdersResponse, PricingResponse } from "../types/order";
+import {
+  CreateOrderPayload,
+  CreateOrderResponse,
+  GetOrderByIdResponse,
+  GetOrderStatusDeliveryResponse,
+  PricingResponse,
+} from "../types/order";
 
 export const OrderService = {
   async getOrderStatusDelivery(orderId: string) : Promise<GetOrderStatusDeliveryResponse> {
@@ -13,9 +19,9 @@ export const OrderService = {
     return res.data.Data;
   },
 
-  async getOrderById(orderId: string): Promise<ListOrdersResponse> {
+  async getOrderById(orderId: string): Promise<GetOrderByIdResponse> {
     const res = await orderApi.get<
-      ApiResponse<ListOrdersResponse> | ApiResponseError
+      ApiResponse<GetOrderByIdResponse> | ApiResponseError
     >(`/${orderId}`);
 
     if ("Error" in res.data) {
