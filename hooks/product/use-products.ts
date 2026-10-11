@@ -24,7 +24,6 @@ export const useProducts = () => {
           ...DEFAULT_PARAMS,
           ...params,
         });
-        console.log('data',data)
         setProducts(data.items);
       } catch (err) {
         console.error("❌ Error loading products", err);

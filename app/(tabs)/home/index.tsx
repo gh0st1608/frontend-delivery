@@ -38,9 +38,9 @@ export default function MainPageScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchProducts();
+    await Promise.all([fetchProducts(), fetchCategories()]);
     setRefreshing(false);
-  }, []);
+  }, [fetchProducts, fetchCategories]);
 
   return (
     <ScrollView
@@ -147,7 +147,7 @@ export default function MainPageScreen() {
       )}
 
       {/* BTN FLOTANTE */}
-      <TouchableOpacity style={styles.fab}>
+      <TouchableOpacity style={styles.fab} onPress={() => router.push("/cart")}>
         <ThemedText type="defaultSemiBold" style={styles.fabText}>
           Ver carrito
         </ThemedText>

@@ -11,23 +11,29 @@ import ProductCard from "@/components/home/product-card";
 import EmptySearch from "@/components/home/empty-search";
 import SearchWithFilter from "@/components/home/search-input";
 import { useProducts } from "@/hooks/product/use-products";
+import { useCarts } from "@/hooks/cart/use-cart";
+import { router } from "expo-router";
 
 export default function SearchFoodScreen() {
   const [query, setQuery] = useState("");
   const { products, loading, fetchProducts } = useProducts();
+  const { addToCart } = useCarts();
+  const hasQuery = query.trim().length > 0;
 
   useEffect(() => {
-    if (!query.trim()) return;
+    if (!hasQuery) return;
 
     const delay = setTimeout(() => {
-      fetchProducts({ search: query });
+      fetchProducts({ search: query.trim() });
     }, 400);
 
     return () => clearTimeout(delay);
-  }, [query]);
+  }, [query, hasQuery, fetchProducts]);
 
-  const showResultsText =
-    !loading && query.trim().length > 0 && products.length > 0;
+  // Sin texto no se muestran resultados de una búsqueda anterior
+  const results = hasQuery ? products : [];
+
+  const showResultsText = !loading && hasQuery && results.length > 0;
 
   return (
     <View style={styles.container}>
@@ -42,20 +48,20 @@ export default function SearchFoodScreen() {
       {/* RESULT COUNT */}
       {showResultsText && (
         <Text style={styles.resultsText}>
-          Found {products.length}{" "}
+          Found {results.length}{" "}
           <Text style={styles.highlight}>{query}</Text> food results
         </Text>
       )}
 
       {loading && <ActivityIndicator size="large" style={styles.loader} />}
 
-      {!loading && query.length > 0 && products.length === 0 && (
+      {!loading && hasQuery && results.length === 0 && (
         <EmptySearch />
       )}
 
-      {!loading && products.length > 0 && (
+      {!loading && results.length > 0 && (
         <FlatList
-          data={products}
+          data={results}
           keyExtractor={(item) => item.productId.toString()}
           numColumns={2}
           columnWrapperStyle={styles.row}
@@ -66,7 +72,15 @@ export default function SearchFoodScreen() {
               name={item.name}
               price={item.price}
               imageUrl={item.image}
-              onPress={() => console.log(item.productId)}
+              storeId={item.storeId}
+              variant="grid"
+              onPress={() =>
+                router.push({
+                  pathname: "/product/[productId]",
+                  params: { productId: item.productId },
+                })
+              }
+              onAdd={() => addToCart(item)}
             />
           )}
         />
