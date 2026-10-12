@@ -1,54 +1,22 @@
-import { View, StyleSheet, ActivityIndicator } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { BaseHeader } from "@/components/base-header";
 import { MapRoute } from "@/components/tracking/map-route";
 import { CourierCard } from "@/components/tracking/courier-card";
 import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
-import { ThemedText } from "@/components/themed-text";
+import { TrackingWaiting } from "@/components/tracking/tracking-waiting";
 import { DestinationCard } from "@/components/tracking/destination-card";
 
 export default function TrackingScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
   const { status, tracking, routeCoordinates } = useOrderTracking(orderId);
 
-  // 🔵 WAITING
-  if (status === "WAITING") {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Looking for courier...</ThemedText>
-      </View>
-    );
-  }
-
-  // 🟢 ASSIGNED
-  if (status === "ASSIGNED") {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Courier assigned. Getting location...</ThemedText>
-      </View>
-    );
-  }
-
-  // ✅ Entregado antes de recibir ubicaciones (p. ej. al reabrir la pantalla)
-  if (!tracking && status === "DELIVERED") {
-    return (
-      <View style={styles.loader}>
-        <ThemedText>Tu pedido fue entregado 🎉</ThemedText>
-      </View>
-    );
-  }
-
-  // 🚀 TRACKING: en camino pero aún sin la primera ubicación
+  // Estados de espera (buscando / asignado / en camino sin ubicación / entregado):
+  // una sola vista con hero + barra de progreso. Se actualiza sola por socket.
   if (!tracking) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Getting courier location...</ThemedText>
-      </View>
-    );
+    return <TrackingWaiting status={status} hasLocation={false} />;
   }
+
   return (
     <View style={styles.container}>
       <BaseHeader title="Tracking" />
