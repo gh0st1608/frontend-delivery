@@ -7,8 +7,11 @@ const C = {
   card: "#FFFFFF",
   text: "#111827",
   muted: "#6B7280",
-  accent: "#22C55E",
-  accentSoft: "#DCFCE7",
+  // Acento negro, alineado al botón "Confirm Delivery" y al header del Figma.
+  // Se mantiene un layout propio (hero + stepper horizontal) para no confundirse
+  // con la línea de tiempo "Order Status" de la pantalla Tracking Order.
+  accent: "#111827",
+  accentSoft: "#F3F4F6",
   track: "#E5E7EB",
 };
 
