@@ -3,6 +3,35 @@ export interface GeocodeResult {
   lng: number;
 }
 
+// Sugerencia de dirección para el autocompletado (Nominatim / OSM)
+export interface AddressSuggestion {
+  lat: number;
+  lng: number;
+  label: string; // texto mostrado en la lista
+  city: string;
+  street: string;
+}
+
+// Respuesta de Nominatim (search / reverse) con addressdetails=1
+export interface NominatimAddress {
+  road?: string;
+  house_number?: string;
+  neighbourhood?: string;
+  suburb?: string;
+  city?: string;
+  town?: string;
+  village?: string;
+  state?: string;
+  country?: string;
+}
+
+export interface NominatimPlace {
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: NominatimAddress;
+}
+
 export interface AddressComponent {
   long_name: string;
   short_name: string;

@@ -19,6 +19,17 @@ export function useGeocoding() {
     }
   };
 
+  // Sugerencias para el autocompletado (varias coincidencias)
+  const search = async (query: string) => {
+    try {
+      setError(null);
+      return await MapsService.searchAddresses(query);
+    } catch (err: any) {
+      setError(err.message);
+      return [];
+    }
+  };
+
   const reverseGeocode = async (lat: number, lng: number) => {
     try {
       setLoading(true);
@@ -35,6 +46,7 @@ export function useGeocoding() {
 
   return {
     geocode,
+    search,
     reverseGeocode,
     loading,
     error,

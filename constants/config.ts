@@ -4,6 +4,5 @@ export const CONFIG = {
   API_URL_SHOP: process.env.EXPO_PUBLIC_API_URL_SHOP!,
   API_URL_CHECKOUT: process.env.EXPO_PUBLIC_API_URL_CHECKOUT!,
   API_URL_PAYMENT: process.env.EXPO_PUBLIC_API_URL_PAYMENT!,
-  API_KEY_GOOGLE: process.env.EXPO_PUBLIC_API_KEY_GOOGLE!,
-  API_URL_GOOGLE: process.env.EXPO_PUBLIC_API_URL_GOOGLE!
+  // Mapa (tiles) y geocodificación usan OpenStreetMap: sin API key.
 };

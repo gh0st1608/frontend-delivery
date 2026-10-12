@@ -1,77 +1,107 @@
-import mapsApi from "@/api/http/clients/maps.client";
 import {
-  GoogleGeocodeResponse,
   GeocodeResult,
   ReverseGeocodeResult,
-  GoogleDirectionsResponse,
+  AddressSuggestion,
+  NominatimPlace,
+  NominatimAddress,
   OsrmResponse,
 } from "@/api/http/types/maps";
-import { CONFIG } from "@/constants/config";
 
-const GOOGLE_KEY = CONFIG.API_KEY_GOOGLE;
+// Geocodificación con Nominatim (OpenStreetMap): gratis, sin API key ni
+// facturación, y coherente con el mapa (que usa tiles de OSM).
+// Política de uso: máx. 1 petición/segundo (el autocompletado va con debounce).
+// En producción conviene un proveedor con SLA o un Nominatim propio.
+const NOMINATIM = "https://nominatim.openstreetmap.org";
+const LANG = "es";
+
+async function nominatim<T>(path: string, params: Record<string, string>): Promise<T> {
+  const qs = new URLSearchParams({
+    format: "jsonv2",
+    "accept-language": LANG,
+    ...params,
+  }).toString();
+
+  // El navegador no permite fijar User-Agent (usa el Referer); en nativo sí.
+  const res = await fetch(`${NOMINATIM}${path}?${qs}`, {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nominatim ${res.status}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+// Ciudad y calle legibles a partir del detalle de Nominatim
+function toReadable(place: NominatimPlace): ReverseGeocodeResult {
+  const a: NominatimAddress = place.address ?? {};
+  const city = a.city || a.town || a.village || a.suburb || a.state || "";
+  const street =
+    [a.road, a.house_number].filter(Boolean).join(" ") ||
+    a.neighbourhood ||
+    a.suburb ||
+    place.display_name.split(",")[0];
+
+  return { city, street, fullAddress: place.display_name };
+}
 
 export const MapsService = {
+  // Busca varias coincidencias (para el autocompletado)
+  async searchAddresses(query: string): Promise<AddressSuggestion[]> {
+    const q = query.trim();
+    if (q.length < 3) return [];
+
+    const places = await nominatim<NominatimPlace[]>("/search", {
+      q,
+      addressdetails: "1",
+      limit: "6",
+    });
+
+    return places.map((p) => {
+      const { city, street, fullAddress } = toReadable(p);
+      return {
+        lat: Number(p.lat),
+        lng: Number(p.lon),
+        label: fullAddress,
+        city,
+        street,
+      };
+    });
+  },
+
+  // Dirección -> coordenadas (primera coincidencia)
   async geocodeAddress(address: string): Promise<GeocodeResult> {
-    const encoded = encodeURIComponent(address);
-
-    const res = await mapsApi.get<GoogleGeocodeResponse>(`/geocode/json`, {
-      params: {
-        address: encoded,
-        key: GOOGLE_KEY,
-      },
+    const places = await nominatim<NominatimPlace[]>("/search", {
+      q: address,
+      limit: "1",
     });
 
-    if (res.data.status !== "OK") {
-      throw new Error(res.data.error_message || "Geocoding failed");
+    if (!places.length) {
+      throw new Error("No se encontró la dirección");
     }
-
-    const location = res.data.results[0].geometry.location;
-
-    return {
-      lat: location.lat,
-      lng: location.lng,
-    };
+    return { lat: Number(places[0].lat), lng: Number(places[0].lon) };
   },
 
-  async reverseGeocode(
-    lat: number,
-    lng: number,
-  ): Promise<ReverseGeocodeResult> {
-    const res = await mapsApi.get<GoogleGeocodeResponse>(`/geocode/json`, {
-      params: {
-        latlng: `${lat},${lng}`,
-        key: GOOGLE_KEY,
-      },
+  // Coordenadas -> dirección (al arrastrar el marcador o tocar el mapa)
+  async reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult> {
+    const place = await nominatim<NominatimPlace>("/reverse", {
+      lat: String(lat),
+      lon: String(lng),
+      addressdetails: "1",
     });
 
-    if (res.data.status !== "OK") {
-      throw new Error(res.data.error_message || "Reverse geocoding failed");
+    if (!place || (!place.address && !place.display_name)) {
+      throw new Error("No se encontró la dirección");
     }
-
-    const result = res.data.results[0];
-
-    const addressComponents = result.address_components;
-
-    const city =
-      addressComponents.find((c) => c.types.includes("locality"))?.long_name ??
-      "";
-
-    const street =
-      addressComponents.find((c) => c.types.includes("route"))?.long_name ??
-      result.formatted_address;
-
-    return {
-      city,
-      street,
-      fullAddress: result.formatted_address,
-    };
+    return toReadable(place);
   },
+
+  // Ruta del repartidor (OSRM público, gratis)
   async getRoute(
     origin: GeocodeResult,
     destination: GeocodeResult,
   ): Promise<[number, number][]> {
     const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}`;
-
     const res = await fetch(`${url}?overview=full&geometries=geojson`);
 
     if (!res.ok) {
@@ -79,34 +109,13 @@ export const MapsService = {
     }
 
     const data: OsrmResponse = await res.json();
-
     if (!data.routes || data.routes.length === 0) {
       throw new Error("No route found");
     }
 
-    // Convertir [lng, lat] → [lat, lng]
-    const formattedRoute = data.routes[0].geometry.coordinates.map(
+    // OSRM devuelve [lng, lat]; el mapa usa [lat, lng]
+    return data.routes[0].geometry.coordinates.map(
       ([lng, lat]) => [lat, lng] as [number, number],
     );
-    console.log('formattedRoute',formattedRoute)
-    return formattedRoute;
   },
-  /* async getRoute(origin: GeocodeResult, destination: GeocodeResult): Promise<string> {
-    const res = await mapsApi.get<GoogleDirectionsResponse>(
-      "/directions/json",
-      {
-        params: {
-          origin: `${origin.lat},${origin.lng}`,
-          destination: `${destination.lat},${destination.lng}`,
-          key: GOOGLE_KEY,
-        },
-      },
-    );
-
-    if (res.data.status !== "OK") {
-      throw new Error(res.data.error_message || "Directions failed");
-    }
-
-    return res.data.routes[0].overview_polyline.points;
-  }, */
 };

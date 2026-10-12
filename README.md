@@ -14,7 +14,8 @@ Construida con **Expo (SDK 54)**, **React Native 0.81** y **Expo Router**. Corre
 | HTTP | Axios con interceptores: access token, cabecera `X-Client-Type` y renovación de sesión ante un 401 |
 | Sesión | Access token en memoria; refresh token en `expo-secure-store` (móvil) o cookie HttpOnly (web) |
 | Tiempo real | Socket.IO client autenticado con el access token |
-| Mapas | `react-native-maps` (nativo), Leaflet / `react-leaflet` (web), Google Geocoding y Directions, `@mapbox/polyline` |
+| Mapas | `react-native-maps` (nativo), Leaflet / `react-leaflet` (web) con tiles de OpenStreetMap, `@mapbox/polyline` |
+| Geocodificación | OpenStreetMap: Nominatim (buscar direcciones) y OSRM (rutas). Sin API key |
 | Pagos | PayPal a través de backend-payment |
 
 ## Requisitos
@@ -45,8 +46,6 @@ EXPO_PUBLIC_API_URL_CHECKOUT=http://<HOST>:3003/checkout
 EXPO_PUBLIC_API_URL_ORDER=http://<HOST>:3004/order
 EXPO_PUBLIC_API_URL_PAYMENT=http://<HOST>:3005/payment
 EXPO_PUBLIC_SOCKET_URL=http://<HOST>:3004
-EXPO_PUBLIC_API_URL_GOOGLE=https://maps.googleapis.com/maps/api
-EXPO_PUBLIC_API_KEY_GOOGLE=<api key de Google>
 ```
 
 | Variable | Uso |
@@ -57,8 +56,6 @@ EXPO_PUBLIC_API_KEY_GOOGLE=<api key de Google>
 | `EXPO_PUBLIC_API_URL_ORDER` | backend-order: pedidos, tarifas (`/pricing`) y confirmación de entrega |
 | `EXPO_PUBLIC_API_URL_PAYMENT` | backend-payment: creación y confirmación del pago en PayPal |
 | `EXPO_PUBLIC_SOCKET_URL` | Servidor Socket.IO de backend-order (tracking en tiempo real) |
-| `EXPO_PUBLIC_API_KEY_GOOGLE` | API key de Google (geocoding y rutas) |
-| `EXPO_PUBLIC_API_URL_GOOGLE` | URL base de las APIs de Google Maps |
 
 Cada URL incluye el prefijo del servicio, porque los servicios del front llaman rutas relativas (`/login`, `/carts/me`, `/pricing`, ...). Las variables se leen en [constants/config.ts](constants/config.ts) y en [api/socket/clients/socket.client.ts](api/socket/clients/socket.client.ts). Al cambiarlas, reinicia el bundler con `npx expo start -c`.
 
@@ -110,7 +107,7 @@ app/                    Rutas (Expo Router, basado en archivos)
 └── (stack)/            Producto, carrito, checkout, pago, tracking y ajustes
 api/
 ├── http/
-│   ├── clients/        Instancias de Axios por microservicio (y Google Maps)
+│   ├── clients/        Instancias de Axios por microservicio
 │   ├── interceptors/   Token, X-Client-Type y renovación de sesión ante un 401
 │   ├── services/       Llamadas a la API por dominio
 │   ├── types/          Tipos de request/response
@@ -159,7 +156,7 @@ La app está orientada a Chile y muestra los montos en **pesos chilenos** ([util
 1. **Sesión**: [app/index.tsx](app/index.tsx) redirige según el `AuthContext`: login, onboarding de categorías, definición de contraseña o home.
 2. **Catálogo**: home con categorías y productos, búsqueda y favoritos. Desde el detalle o la búsqueda se agrega al carrito, respetando el stock.
 3. **Carrito**: se guarda en backend-checkout (`/checkout/carts/me`) y se sincroniza al entrar a la app. No se pueden mezclar productos de distintas tiendas.
-4. **Checkout**: se elige la dirección en el mapa (geocoding con Google), se crea la orden y luego el pago en PayPal. Por ahora PayPal es el único medio habilitado; los demás aparecen como "Próximamente".
+4. **Checkout**: se elige la dirección en el mapa (autocompletado y geocodificación con OpenStreetMap/Nominatim), se crea la orden y luego el pago en PayPal. Por ahora PayPal es el único medio habilitado; los demás aparecen como "Próximamente".
 5. **Pago**: las pantallas `payment/processing`, `success` y `failure` confirman el pago. El carrito se vacía **solo** cuando el pago se confirma; si falla o se cancela, el carrito sigue intacto.
 6. **Tracking**: `tracking/[orderId]` y `tracking/order/[orderId]` se suscriben a `order.tracking.updated` y `order.courier.assigned`, muestran la ruta del repartidor y permiten **confirmar la entrega** (`PATCH /order/:id/confirm-delivery`).
 
