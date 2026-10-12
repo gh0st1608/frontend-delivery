@@ -11,6 +11,7 @@ import { useOrderTracking } from "@/hooks/tracking/use-order-tracking";
 import { ThemedText } from "@/components/themed-text";
 import { DestinationCard } from "@/components/tracking/destination-card";
 import { OrderTimeline } from "@/components/tracking/order-timeline";
+import { TrackingWaiting } from "@/components/tracking/tracking-waiting";
 import {
   isDeliveredPhase,
   isDropoffPhase,
@@ -70,39 +71,11 @@ export default function TrackingOrderScreen() {
     }
   };
 
-  if (status === "WAITING") {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Looking for courier...</ThemedText>
-      </View>
-    );
-  }
-
-  if (status === "ASSIGNED") {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Courier assigned...</ThemedText>
-      </View>
-    );
-  }
-
-  if (!tracking && status === "DELIVERED") {
-    return (
-      <View style={styles.loader}>
-        <ThemedText>Tu pedido fue entregado 🎉</ThemedText>
-      </View>
-    );
-  }
-
+  // Estados de espera: misma vista (hero + barra de progreso) que la pantalla
+  // de tracking, para mantener la consistencia. La línea de tiempo "Order
+  // Status" se muestra en cuanto hay datos de seguimiento.
   if (!tracking) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-        <ThemedText>Loading tracking...</ThemedText>
-      </View>
-    );
+    return <TrackingWaiting status={status} hasLocation={false} />;
   }
 
   // La entrega confirmada se refleja aunque el socket aún no lo haya emitido
@@ -152,12 +125,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: "#F6F6F6",
-  },
-
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   sectionTitle: {
