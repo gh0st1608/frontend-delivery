@@ -40,12 +40,12 @@ Las variables se definen por entorno. Solo se versionan las plantillas:
 
 ```env
 # .env.local
-EXPO_PUBLIC_API_URL_AUTH=http://<HOST>:3000/auth
-EXPO_PUBLIC_API_URL_SHOP=http://<HOST>:3002/shop
-EXPO_PUBLIC_API_URL_CHECKOUT=http://<HOST>:3003/checkout
-EXPO_PUBLIC_API_URL_ORDER=http://<HOST>:3004/order
-EXPO_PUBLIC_API_URL_PAYMENT=http://<HOST>:3005/payment
-EXPO_PUBLIC_SOCKET_URL=http://<HOST>:3004
+EXPO_PUBLIC_API_URL_AUTH=http://<HOST>:8080/auth
+EXPO_PUBLIC_API_URL_SHOP=http://<HOST>:8080/shop
+EXPO_PUBLIC_API_URL_CHECKOUT=http://<HOST>:8080/checkout
+EXPO_PUBLIC_API_URL_ORDER=http://<HOST>:8080/order
+EXPO_PUBLIC_API_URL_PAYMENT=http://<HOST>:8080/payment
+EXPO_PUBLIC_SOCKET_URL=http://<HOST>:8080
 ```
 
 | Variable | Uso |
@@ -57,7 +57,7 @@ EXPO_PUBLIC_SOCKET_URL=http://<HOST>:3004
 | `EXPO_PUBLIC_API_URL_PAYMENT` | backend-payment: creación y confirmación del pago en PayPal |
 | `EXPO_PUBLIC_SOCKET_URL` | Servidor Socket.IO de backend-order (tracking en tiempo real) |
 
-Cada URL incluye el prefijo del servicio, porque los servicios del front llaman rutas relativas (`/login`, `/carts/me`, `/pricing`, ...). Las variables se leen en [constants/config.ts](constants/config.ts) y en [api/socket/clients/socket.client.ts](api/socket/clients/socket.client.ts). Al cambiarlas, reinicia el bundler con `npx expo start -c`.
+Todo entra por el **gateway** (nginx) en `:8080`, que enruta `/auth`, `/shop`, `/checkout`, `/order`, `/courier`, `/payment` y `/socket.io` a cada servicio — igual que el API Gateway de AWS en producción. Cada URL incluye el prefijo del servicio porque los servicios del front llaman rutas relativas (`/login`, `/carts/me`, `/pricing`, ...). Las variables se leen en [constants/config.ts](constants/config.ts) y en [api/socket/clients/socket.client.ts](api/socket/clients/socket.client.ts). Al cambiarlas, reinicia el bundler con `npx expo start -c`.
 
 ## Conectar con el backend local
 
@@ -82,7 +82,7 @@ Si levantas la app por tu cuenta (`npm start`), `<HOST>` en `.env.local` depende
 | Dispositivo físico (Expo Go) | IP del equipo en la red local (p. ej. `192.168.1.20`) |
 
 **Otros requisitos:**
-- **CORS (solo web):** el origen de la app (`http://localhost:8081`) debe estar en `CORS_ORIGINS` de cada servicio. Las plantillas `.env.local.example` del backend ya lo incluyen.
+- **CORS (solo web):** el origen de la app (`http://localhost:8081`) debe estar en `CORS_ORIGINS` de cada servicio; el gateway reenvía el `Origin` sin modificarlo. Las plantillas `.env.local.example` del backend ya lo incluyen.
 - **Celular físico:** permite Node.js en el firewall para los puertos 3000-3005 y 8081.
 
 ## Scripts
